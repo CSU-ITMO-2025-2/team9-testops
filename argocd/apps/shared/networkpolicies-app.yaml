@@ -1,8 +1,8 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: testops-postdeploy
-  namespace: argocd
+  name: networkpolicies
+  namespace: team9-ns
   annotations:
     argocd.argoproj.io/sync-wave: "5"
 spec:

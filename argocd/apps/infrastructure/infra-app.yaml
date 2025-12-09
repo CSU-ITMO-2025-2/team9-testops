@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: testops-infra
-  namespace: argocd
+  namespace: team9-ns
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 spec:
