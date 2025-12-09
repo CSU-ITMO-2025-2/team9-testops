@@ -298,6 +298,7 @@ jobs:
       uses: helm/chart-releaser-action@v1.6.0
       with:
         charts_dir: helm
+        skip_existing: true
       env:
         CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
     
@@ -343,7 +344,7 @@ jobs:
           <div class="container">
             <h1>📦 TestOps Helm Repository</h1>
             <div class="repo-info">
-              <p><strong>Repository URL:</strong> <code>https://huynhduc0.github.io/ai-testops</code></p>
+              <p><strong>Repository URL:</strong> <code>https://csu-itmo-2025-2.github.io/team9-testops/</code></p>
               <p><strong>Last Updated:</strong> <span id="timestamp">-</span></p>
             </div>
             <div id="content">
@@ -364,7 +365,7 @@ jobs:
 
                 for (let i = 0; i < lines.length; i++) {
                   const line = lines[i];
-                  // Match chart name like "  testops-infra:" or "  ai-testops:"
+                  // Match chart name like "  testops-infra:" or "  testops:"
                   if (line.match(/^  [a-zA-Z0-9-]+:$/) && !line.includes('entries')) {
                     currentChart = line.replace(':', '').trim();
                     charts[currentChart] = [];

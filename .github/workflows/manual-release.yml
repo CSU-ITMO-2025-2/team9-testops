@@ -210,7 +210,7 @@ jobs:
           <div class="container">
             <h1>📦 TestOps Helm Repository</h1>
             <div class="repo-info">
-              <p><strong>Repository URL:</strong> <code>https://huynhduc0.github.io/ai-testops</code></p>
+              <p><strong>Repository URL:</strong> <code>https://csu-itmo-2025-2.github.io/team9-testops</code></p>
               <p><strong>Last Updated:</strong> <span id="timestamp">-</span></p>
             </div>
             <div id="content">
@@ -311,4 +311,4 @@ jobs:
           echo "  - testops-postdeploy: ${{ steps.current_versions.outputs.POSTDEPLOY_VERSION }}"
         fi
         echo ""
-        echo "🌐 Check GitHub Pages: https://huynhduc0.github.io/ai-testops"
+        echo "🌐 Check GitHub Pages: https://csu-itmo-2025-2.github.io/team9-testops"

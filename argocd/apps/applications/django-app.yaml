@@ -9,7 +9,7 @@ spec:
   project: wide
   
   source:
-    repoURL: https://huynhduc0.github.io/ai-testops
+    repoURL: https://csu-itmo-2025-2.github.io/team9-testops
     chart: testops-publisher
     targetRevision: "1.*.*"
   
