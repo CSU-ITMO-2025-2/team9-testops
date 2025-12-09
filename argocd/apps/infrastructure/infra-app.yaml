@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 spec:
-  project: wide
+  project: team9
   
   source:
     repoURL: https://csu-itmo-2025-2.github.io/team9-testops
@@ -22,7 +22,7 @@ spec:
   
   destination:
     server: https://kubernetes.default.svc
-    namespace: testops
+    namespace: team9-ns
   
   syncPolicy:
     automated:

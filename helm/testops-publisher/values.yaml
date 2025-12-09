@@ -1,6 +1,6 @@
 # Default values for testops-publisher
 
-namespace: testops
+namespace: team9-ns
 
 # Global image settings
 image:
@@ -51,7 +51,7 @@ ingress:
     nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
   hosts:
-    - host: testops.thduc.tech
+    - host: team9.kubepractice.ru
       paths:
         - path: /
           pathType: Prefix

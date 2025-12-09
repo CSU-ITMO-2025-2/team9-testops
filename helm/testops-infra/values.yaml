@@ -1,7 +1,7 @@
 # Default values for testops-infra
 
 global:
-  namespace: testops
+  namespace: team9-ns
 
   # Global image settings
   image:
@@ -104,7 +104,7 @@ global:
   # Ingress (needed for configmap)
   ingress:
     hosts:
-      - host: testops.thduc.tech
+      - host: team9.kubepractice.ru
 
 # Subchart conditions
 postgres:

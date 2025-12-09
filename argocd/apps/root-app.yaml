@@ -8,7 +8,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: wide
+  project: team9
   
   source:
     repoURL: https://github.com/CSU-ITMO-2025-2/team9-testops.git
@@ -19,7 +19,7 @@ spec:
   
   destination:
     server: https://kubernetes.default.svc
-    namespace: testops
+    namespace: team9-ns
   
   syncPolicy:
     automated:
