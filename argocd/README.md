@@ -68,7 +68,7 @@ kubectl get application -n argocd ai-testops
 
 ```bash
 argocd app create ai-testops \
-  --repo https://github.com/huynhduc0/ai-testops.git \
+  --repo https://github.com/CSU-ITMO-2025-2/team9-testops.git \
   --path helm/ai-testops \
   --dest-server https://kubernetes.default.svc \
   --dest-namespace ai-testops \
@@ -85,7 +85,7 @@ argocd app create ai-testops \
    - **Application Name**: `ai-testops`
    - **Project**: `default`
    - **Sync Policy**: `Automatic`
-   - **Repository URL**: `https://github.com/huynhduc0/ai-testops.git`
+   - **Repository URL**: `https://github.com/CSU-ITMO-2025-2/team9-testops.git`
    - **Path**: `helm/ai-testops`
    - **Cluster**: `https://kubernetes.default.svc`
    - **Namespace**: `ai-testops`
@@ -97,8 +97,8 @@ argocd app create ai-testops \
 
 ```bash
 # Клонирование репозитория
-git clone https://github.com/huynhduc0/ai-testops.git
-cd ai-testops
+git clone https://github.com/CSU-ITMO-2025-2/team9-testops.git
+cd team9-testops
 
 # Создание ветки для изменений
 git checkout -b feature/update-replicas
@@ -320,7 +320,7 @@ spec:
     - namespace: 'ai-testops-*'
       server: https://kubernetes.default.svc
   sourceRepos:
-    - https://github.com/huynhduc0/ai-testops.git
+    - https://github.com/CSU-ITMO-2025-2/team9-testops.git
 ```
 
 ### 4. RBAC для команды

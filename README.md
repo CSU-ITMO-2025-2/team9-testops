@@ -1,6 +1,6 @@
 # AI TestOps - Distributed Systems Project
 
-[![CI/CD](https://github.com/huynhduc0/ai-testops/workflows/CI/badge.svg)](https://github.com/huynhduc0/ai-testops/actions)
+[![CI/CD](https://github.com/CSU-ITMO-2025-2/team9-testops/workflows/CI/badge.svg)](https://github.com/CSU-ITMO-2025-2/team9-testops/actions)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io/)
 [![ArgoCD](https://img.shields.io/badge/ArgoCD-EF7B4D?logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/)
 [![Helm](https://img.shields.io/badge/Helm-0F1689?logo=helm&logoColor=white)](https://helm.sh/)
@@ -162,8 +162,8 @@ kubectl get application -n argocd
 
 ```bash
 # Клонирование репозитория
-git clone https://github.com/huynhduc0/ai-testops.git
-cd ai-testops
+git clone https://github.com/CSU-ITMO-2025-2/team9-testops.git
+cd team9-testops
 
 # Запуск всех сервисов
 docker-compose up -d
@@ -390,11 +390,11 @@ The AI TestOps project is designed to streamline and automate the testing operat
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/huynhduc0/ai-testops.git
+    git clone https://github.com/CSU-ITMO-2025-2/team9-testops.git
     ```
 2. Navigate to the project directory:
     ```bash
-    cd ai-testops
+    cd team9-testops
     ```
 3. Install the required dependencies:
     ```bash
