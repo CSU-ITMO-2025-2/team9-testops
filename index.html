@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>TestOps Helm Charts</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    h1 { color: #333; border-bottom: 3px solid #007bff; padding-bottom: 10px; }
+    h2 { color: #555; margin-top: 30px; margin-bottom: 15px; }
+    .repo-info { background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0; }
+    code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: 'Courier New', monospace; }
+    .chart-section { margin: 20px 0; }
+    .versions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+    .version-badge { display: inline-block; background: #007bff; color: white; padding: 4px 8px; border-radius: 3px; font-size: 12px; }
+    .version-badge.old { background: #6c757d; }
+    #loading { text-align: center; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📦 TestOps Helm Repository</h1>
+    <div class="repo-info">
+      <p><strong>Repository URL:</strong> <code>https://csu-itmo-2025-2.github.io/team9-testops/</code></p>
+      <p><strong>Last Updated:</strong> <span id="timestamp">-</span></p>
+    </div>
+    <div id="content">
+      <div id="loading">⏳ Loading chart versions...</div>
+    </div>
+  </div>
+  <script>
+    fetch('index.yaml')
+      .then(response => response.text())
+      .then(data => {
+        const timestamp = new Date().toLocaleString();
+        document.getElementById('timestamp').textContent = timestamp;
+        
+        // Parse YAML format - helm chart-releaser format
+        const lines = data.split('\n');
+        const charts = {};
+        let currentChart = null;
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          // Match chart name like "  testops-infra:" or "  testops:"
+          if (line.match(/^  [a-zA-Z0-9-]+:$/) && !line.includes('entries')) {
+            currentChart = line.replace(':', '').trim();
+            charts[currentChart] = [];
+          }
+          // Match version line like "    version: 1.2.0"
+          else if (currentChart && line.match(/^\s+version:\s/)) {
+            const version = line.split(':')[1].trim().replace(/"/g, '');
+            charts[currentChart].push(version);
+          }
+        }
+
+        // Helper to sort semver desc
+        const compareSemverDesc = (a, b) => {
+          const pa = a.split('.').map(Number);
+          const pb = b.split('.').map(Number);
+          const len = Math.max(pa.length, pb.length);
+          for (let i = 0; i < len; i++) {
+            const da = pa[i] || 0;
+            const db = pb[i] || 0;
+            if (da !== db) return db - da; // desc
+          }
+          return 0;
+        };
+
+        // Generate HTML
+        const content = document.getElementById('content');
+        content.innerHTML = '';
+
+        for (const [chart, versions] of Object.entries(charts)) {
+          if (versions.length === 0) continue;
+
+          const uniq = Array.from(new Set(versions));
+          const top10 = uniq.sort(compareSemverDesc).slice(0, 10);
+
+          const section = document.createElement('div');
+          section.className = 'chart-section';
+
+          let html = `<h2>${chart}</h2><div class="versions">`;
+          top10.forEach((v, idx) => {
+            const badgeClass = idx === 0 ? 'version-badge' : 'version-badge old';
+            html += `<span class="${badgeClass}">${v}</span>`;
+          });
+          html += '</div>';
+
+          section.innerHTML = html;
+          content.appendChild(section);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('content').innerHTML = '<p style="color: red;">❌ Error loading chart versions</p>';
+      });
+  </script>
+</body>
+</html>
