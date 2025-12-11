@@ -1,7 +1,7 @@
 # Default values for testops-infra
 
 global:
-  namespace: testops
+  namespace: team9-ns
 
   # Global image settings
   image:

@@ -1,6 +1,6 @@
 # Default values for testops-publisher
 
-namespace: testops
+namespace: team9-ns
 
 # Global image settings
 image:

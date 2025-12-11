@@ -1,6 +1,6 @@
 # Default values for testops-postdeploy
 
-namespace: testops
+namespace: team9-ns
 
 # NetworkPolicies
 networkPolicies:

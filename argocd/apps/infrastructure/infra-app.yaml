@@ -22,7 +22,7 @@ spec:
   
   destination:
     server: https://kubernetes.default.svc
-    namespace: testops
+    namespace: team9-ns
   
   syncPolicy:
     automated:
