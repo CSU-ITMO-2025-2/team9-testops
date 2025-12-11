@@ -1,5 +1,89 @@
 apiVersion: v1
 entries:
+  team9-consumer:
+  - apiVersion: v2
+    appVersion: 5e6dd4b
+    created: "2025-12-11T09:38:19.028524404Z"
+    description: Consumer service for TestOps platform
+    digest: aa3a1385ecfec96a983ae89a2443d1a8426496a8f4c2b1bef03f9db9367b343a
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-consumer
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-consumer-1.1.10/team9-consumer-1.1.10.tgz
+    version: 1.1.10
+  team9-infra:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-12-11T09:38:19.208205297Z"
+    dependencies:
+    - condition: postgres.enabled
+      name: postgres
+      repository: ""
+      version: 1.0.0
+    - condition: kafka.enabled
+      name: kafka
+      repository: ""
+      version: 1.0.0
+    - name: shared
+      repository: ""
+      version: 1.0.0
+    - condition: prometheus.enabled
+      name: prometheus
+      repository: ""
+      version: 1.0.0
+    description: Infrastructure components for TestOps platform (PostgreSQL, Kafka,
+      shared resources)
+    digest: e8734197220857cd6db8010189326084d5feb8f890549aab39ff83248db70f0a
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-infra
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-infra-1.2.21/team9-infra-1.2.21.tgz
+    version: 1.2.21
+  team9-postdeploy:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-12-11T09:38:19.379197293Z"
+    description: Post-deployment resources for TestOps (NetworkPolicies, Monitoring)
+    digest: 88237318f28acba1ed9ac077de0d5c51f89aedd7c741e6f4504ea344bbf275b0
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-postdeploy
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-postdeploy-1.1.14/team9-postdeploy-1.1.14.tgz
+    version: 1.1.14
+  team9-publisher:
+  - annotations:
+      keda.sh/installation: |
+        Install KEDA before deploying this chart:
+        kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.12.0/keda-2.12.0.yaml
+      keda.sh/required: "true"
+    apiVersion: v2
+    appVersion: 5e6dd4b
+    created: "2025-12-11T09:38:19.558368594Z"
+    description: Publisher service for TestOps platform
+    digest: 2d18610c3ea7ea9eeded3113dc2c1682182c8de2325aad64d7065a88963f2ee8
+    keywords:
+    - ai
+    - testing
+    - kafka
+    - microservices
+    - keda
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-publisher
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-publisher-1.4.11/team9-publisher-1.4.11.tgz
+    version: 1.4.11
   testops-consumer:
   - apiVersion: v2
     appVersion: f039e2d
@@ -84,4 +168,4 @@ entries:
     urls:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/testops-publisher-1.4.10/testops-publisher-1.4.10.tgz
     version: 1.4.10
-generated: "2025-12-09T12:53:13.412424568Z"
+generated: "2025-12-11T09:38:19.558379224Z"
