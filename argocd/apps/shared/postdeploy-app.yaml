@@ -1,12 +1,12 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: testops-postdeploy
+  name: team9-postdeploy
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "5"
 spec:
-  project: wide
+  project: team9
   
   source:
     repoURL: https://csu-itmo-2025-2.github.io/team9-testops

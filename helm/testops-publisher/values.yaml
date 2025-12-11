@@ -9,7 +9,7 @@ image:
 # Django Application
 djangoApp:
   enabled: true
-  name: testops-publisher
+  name: team9-publisher
   replicaCount: 1
   image:
     repository: vanlahuynhduc/ai-testops

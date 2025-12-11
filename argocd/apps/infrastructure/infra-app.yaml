@@ -1,12 +1,12 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: testops-infra
+  name: team9-infra
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 spec:
-  project: wide
+  project: team9
   
   source:
     repoURL: https://csu-itmo-2025-2.github.io/team9-testops

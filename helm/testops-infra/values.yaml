@@ -10,30 +10,14 @@ global:
 
   # PostgreSQL Database
   postgres:
-    enabled: true
-    name: postgres
-    image:
-      repository: postgres
-      tag: "13"
-    service:
-      type: ClusterIP
-      port: 5432
-    persistence:
-      enabled: true
-      size: 2Gi
-      storageClass: "standard"
-    config:
-      database: canvas_db
-    credentials:
-      username: canvas_user
-      password: canvas_password
-    resources:
-      requests:
-        memory: "512Mi"
-        cpu: "500m"
-      limits:
-        memory: "1Gi"
-        cpu: "1000m"
+    enabled: false
+    # Using external database
+    external:
+      host: 79.174.89.43
+      port: 18809
+      database: team9_db
+      username: team9
+      password: Er3dNsZ6#b8Lh0vP
 
   # Kafka
   kafka:
@@ -66,7 +50,7 @@ global:
 
   # Django App reference (for configmap/secrets)
   djangoApp:
-    name: testops-publisher
+    name: team9-publisher
 
   # Security
   rbac:

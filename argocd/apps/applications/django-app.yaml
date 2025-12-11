@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "4"
 spec:
-  project: wide
+  project: team9
   
   source:
     repoURL: https://csu-itmo-2025-2.github.io/team9-testops

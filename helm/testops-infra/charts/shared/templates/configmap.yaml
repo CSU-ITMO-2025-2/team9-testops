@@ -8,18 +8,9 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 data:
-  POSTGRES_DB: {{ .Values.global.postgres.config.database | quote }}
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: app-config
-  namespace: {{ .Values.global.namespace }}
-  labels:
-    {{- include "ai-testops.labels" . | nindent 4 }}
-data:
-  POSTGRES_HOST: "{{ .Values.global.postgres.name }}.{{ .Values.global.namespace }}.svc.cluster.local"
-  POSTGRES_PORT: {{ .Values.global.postgres.service.port | quote }}
+  POSTGRES_DB: {{ .Values.global.postgres.external.database | quote }}
+  POSTGRES_HOST: {{ .Values.global.postgres.external.host | quote }}
+  POSTGRES_PORT: {{ .Values.global.postgres.external.port | quote }}
   KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.global.kafka.name }}.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.global.kafka.service.port }}"
   KAFKA_TOPIC: "test_run_queue"
   SECRET_KEY: {{ .Values.global.django.secretKey | quote }}

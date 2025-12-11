@@ -1,5 +1,5 @@
 apiVersion: v2
-name: testops-infra
+name: team9-infra
 description: Infrastructure components for TestOps platform (PostgreSQL, Kafka, shared resources)
 type: application
 version: 1.2.20
