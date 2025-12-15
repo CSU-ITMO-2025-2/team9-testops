@@ -19,56 +19,33 @@ global:
       username: team9
       # passwordSecretRef: team9-db-secret (to be created separately)
 
-  # Kafka - disabled, using Strimzi instead
+  # Kafka - enabled, standard deployment
   kafka:
-    enabled: false
+    enabled: true
+    name: kafka
+    image:
+      repository: confluentinc/cp-kafka
+      tag: "7.6.0"
+    service:
+      type: ClusterIP
+      port: 9092
+    persistence:
+      enabled: true
+      size: 10Gi
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 250m
+      limits:
+        memory: 1Gi
+        cpu: 500m
+    config:
+      replicationFactor: 1
 
-  # Strimzi Kafka Cluster (KRaft Mode - no ZooKeeper)
+  # Strimzi Kafka Cluster (disabled - using standard Kafka)
   strimzi:
     kafka:
-      enabled: true
-      name: team9-kafka
-      version: "4.1.1"
-      metadataVersion: "4.1-IV1"
-      brokers:
-        replicas: 2
-        resources:
-          requests:
-            memory: 512Mi
-            cpu: 250m
-          limits:
-            memory: 1Gi
-            cpu: 500m
-      controller:
-        replicas: 1
-        resources:
-          requests:
-            memory: 256Mi
-            cpu: 100m
-          limits:
-            memory: 512Mi
-            cpu: 200m
-      topicOperator:
-        resources:
-          requests:
-            memory: 256Mi
-            cpu: 100m
-          limits:
-            memory: 512Mi
-            cpu: 200m
-      userOperator:
-        resources:
-          requests:
-            memory: 256Mi
-            cpu: 100m
-          limits:
-            memory: 512Mi
-            cpu: 200m
-      storage:
-        type: persistent-claim
-        size: 10Gi
-        controllerSize: 5Gi
-      minInSyncReplicas: 1
+      enabled: false
 
   # Django App reference (for configmap/secrets)
   djangoApp:
