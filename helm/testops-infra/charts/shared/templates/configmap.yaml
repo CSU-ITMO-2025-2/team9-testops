@@ -11,7 +11,11 @@ data:
   POSTGRES_DB: {{ .Values.global.postgres.external.database | quote }}
   POSTGRES_HOST: {{ .Values.global.postgres.external.host | quote }}
   POSTGRES_PORT: {{ .Values.global.postgres.external.port | quote }}
+  {{- if .Values.global.strimzi.kafka.enabled }}
+  KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.global.strimzi.kafka.name }}-kafka-bootstrap.{{ .Values.global.namespace }}.svc:9092"
+  {{- else }}
   KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.global.kafka.name }}.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.global.kafka.service.port }}"
+  {{- end }}
   KAFKA_TOPIC: "test_run_queue"
   SECRET_KEY: {{ .Values.global.django.secretKey | quote }}
   ALLOWED_HOSTS: "{{ (index .Values.global.ingress.hosts 0).host }},localhost,127.0.0.1"
