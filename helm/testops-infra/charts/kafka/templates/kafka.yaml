@@ -27,11 +27,19 @@ spec:
         - name: KAFKA_BROKER_ID
           value: "{{ .Values.global.kafka.config.brokerId }}"
         - name: KAFKA_LISTENERS
-          value: "PLAINTEXT://0.0.0.0:{{ .Values.global.kafka.service.port }}"
+          value: "PLAINTEXT://0.0.0.0:{{ .Values.global.kafka.service.port }},CONTROLLER://0.0.0.0:9093"
         - name: KAFKA_ADVERTISED_LISTENERS
           value: "PLAINTEXT://{{ .Values.global.kafka.name }}.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.global.kafka.service.port }}"
+        - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+          value: "1@{{ .Values.global.kafka.name }}.{{ .Values.global.namespace }}.svc.cluster.local:9093"
+        - name: KAFKA_PROCESS_ROLES
+          value: "broker,controller"
+        - name: KAFKA_NODE_ID
+          value: "1"
+        - name: CLUSTER_ID
+          value: "MkQkV1BjTUtrLWVTNQ"
         - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
-          value: "{{ .Values.global.kafka.config.replicationFactor }}"
+          value: "1"
         - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
           value: "true"
         - name: KAFKA_LOG_RETENTION_HOURS
@@ -39,6 +47,8 @@ spec:
         ports:
         - containerPort: {{ .Values.global.kafka.service.port }}
           name: kafka
+        - containerPort: 9093
+          name: controller
         resources:
           {{- toYaml .Values.global.kafka.resources | nindent 10 }}
         livenessProbe:
@@ -67,6 +77,10 @@ spec:
   ports:
   - port: {{ .Values.global.kafka.service.port }}
     targetPort: {{ .Values.global.kafka.service.port }}
+    name: kafka
+  - port: 9093
+    targetPort: 9093
+    name: controller
   selector:
     app: {{ .Values.global.kafka.name }}
 {{- end }}
