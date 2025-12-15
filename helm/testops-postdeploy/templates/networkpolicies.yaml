@@ -38,7 +38,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app: testops-publisher
+          app: team9-publisher
     ports:
     - protocol: TCP
       port: 5432
@@ -65,7 +65,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app: testops-publisher
+          app: team9-publisher
     ports:
     - protocol: TCP
       port: 9092
@@ -112,7 +112,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: testops-publisher
+      app: team9-publisher
   policyTypes:
   - Ingress
   ingress:

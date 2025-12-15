@@ -1,4 +1,4 @@
-# Default values for testops-publisher
+# Default values for team9-publisher
 
 namespace: team9-ns
 
@@ -55,12 +55,12 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
-          service: testops-publisher
+          service: team9-publisher
           port: 8000
     - host: team9.kubepractice.ru
       paths:
         - path: /
           pathType: Prefix
-          service: testops-publisher
+          service: team9-publisher
           port: 8000
   tls: []
