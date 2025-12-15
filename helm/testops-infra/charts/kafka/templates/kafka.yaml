@@ -1,26 +1,4 @@
 {{- if .Values.global.kafka.enabled }}
-{{- if .Values.global.kafka.persistence.enabled }}
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: kafka-pvc
-  namespace: {{ .Values.global.namespace }}
-  labels:
-    app: {{ .Values.global.kafka.name }}
-    {{- include "ai-testops.labels" . | nindent 4 }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
-spec:
-  accessModes:
-    - ReadWriteOnce
-  {{- if .Values.global.kafka.persistence.storageClass }}
-  storageClassName: {{ .Values.global.kafka.persistence.storageClass }}
-  {{- end }}
-  resources:
-    requests:
-      storage: {{ .Values.global.kafka.persistence.size }}
-{{- end }}
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -45,23 +23,26 @@ spec:
       - name: kafka
         image: "{{ .Values.global.kafka.image.repository }}:{{ .Values.global.kafka.image.tag }}"
         imagePullPolicy: {{ .Values.global.image.pullPolicy }}
-        command:
-          - sh
-          - -c
-          - |
-            /home/appuser/start.sh
+        env:
+        - name: KAFKA_CFG_BROKER_ID
+          value: "1"
+        - name: KAFKA_CFG_LISTENERS
+          value: "PLAINTEXT://:{{ .Values.global.kafka.service.port }}"
+        - name: KAFKA_CFG_ADVERTISED_LISTENERS
+          value: "PLAINTEXT://{{ .Values.global.kafka.name }}.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.global.kafka.service.port }}"
+        - name: KAFKA_CFG_ZOOKEEPER_CONNECT
+          value: "zookeeper:2181"
+        - name: KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE
+          value: "true"
+        - name: KAFKA_CFG_NUM_PARTITIONS
+          value: "1"
+        - name: KAFKA_CFG_DEFAULT_REPLICATION_FACTOR
+          value: "{{ .Values.global.kafka.config.replicationFactor }}"
         ports:
         - containerPort: {{ .Values.global.kafka.service.port }}
           name: kafka
-        - containerPort: 9093
-          name: controller
         resources:
           {{- toYaml .Values.global.kafka.resources | nindent 10 }}
-        {{- if .Values.global.kafka.persistence.enabled }}
-        volumeMounts:
-        - name: kafka-storage
-          mountPath: /kafka/kafka-logs
-        {{- end }}
         livenessProbe:
           tcpSocket:
             port: {{ .Values.global.kafka.service.port }}
@@ -72,12 +53,6 @@ spec:
             port: {{ .Values.global.kafka.service.port }}
           initialDelaySeconds: 30
           periodSeconds: 5
-      {{- if .Values.global.kafka.persistence.enabled }}
-      volumes:
-      - name: kafka-storage
-        persistentVolumeClaim:
-          claimName: kafka-pvc
-      {{- end }}
 ---
 apiVersion: v1
 kind: Service
