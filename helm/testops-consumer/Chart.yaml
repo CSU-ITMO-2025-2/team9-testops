@@ -2,8 +2,8 @@ apiVersion: v2
 name: team9-consumer
 description: Consumer service for TestOps platform
 type: application
-version: 1.1.13
-appVersion: "f1130d2"
+version: 1.1.14
+appVersion: "0dcf16f"
 maintainers:
   - name: Duc Truong
     email: thduc.dev@gmail.com
