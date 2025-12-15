@@ -24,8 +24,8 @@ global:
     enabled: true
     name: kafka
     image:
-      repository: confluentinc/cp-kafka
-      tag: "7.6.0"
+      repository: bitnami/kafka
+      tag: "latest"
     service:
       type: ClusterIP
       port: 9092
