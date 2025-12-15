@@ -1048,6 +1048,19 @@ entries:
   team9-postdeploy:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2025-12-15T14:07:29.259769832Z"
+    description: Post-deployment resources for TestOps (NetworkPolicies, Monitoring)
+    digest: f6ea1fe137219b4b92858ff8f82cc73aa32a74c7f3715684983e2b3267a0cb37
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-postdeploy
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-postdeploy-1.1.23/team9-postdeploy-1.1.23.tgz
+    version: 1.1.23
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2025-12-15T13:10:55.154067896Z"
     description: Post-deployment resources for TestOps (NetworkPolicies, Monitoring)
     digest: 3c041375edb611cfac644503d52ce57d7e635d336586defc5f72c073e34b9b5d
@@ -1164,6 +1177,30 @@ entries:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-postdeploy-1.1.14/team9-postdeploy-1.1.14.tgz
     version: 1.1.14
   team9-publisher:
+  - annotations:
+      keda.sh/installation: |
+        Install KEDA before deploying this chart:
+        kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.12.0/keda-2.12.0.yaml
+      keda.sh/required: "true"
+    apiVersion: v2
+    appVersion: ef6619c
+    created: "2025-12-15T14:07:29.479527177Z"
+    description: Publisher service for TestOps platform
+    digest: f6c2874f96897072ea965b005d0e23db056fa268f7f102cd60890807c9c937b6
+    keywords:
+    - ai
+    - testing
+    - kafka
+    - microservices
+    - keda
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-publisher
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-publisher-1.4.23/team9-publisher-1.4.23.tgz
+    version: 1.4.23
   - annotations:
       keda.sh/installation: |
         Install KEDA before deploying this chart:
@@ -1536,4 +1573,4 @@ entries:
     urls:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/testops-publisher-1.4.10/testops-publisher-1.4.10.tgz
     version: 1.4.10
-generated: "2025-12-15T14:06:32.623719377Z"
+generated: "2025-12-15T14:07:29.479721309Z"
