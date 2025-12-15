@@ -2,14 +2,14 @@ apiVersion: chaos-mesh.org/v1alpha1
 kind: PodChaos
 metadata:
   name: kafka-pod-failure
-  namespace: ai-testops
+  namespace: team9-ns
 spec:
   action: pod-failure
   mode: one
   duration: "45s"
   selector:
     namespaces:
-      - ai-testops
+      - team9-ns
     labelSelectors:
       app: kafka
 ---
@@ -17,13 +17,13 @@ apiVersion: chaos-mesh.org/v1alpha1
 kind: NetworkChaos
 metadata:
   name: kafka-network-loss
-  namespace: ai-testops
+  namespace: team9-ns
 spec:
   action: loss
   mode: all
   selector:
     namespaces:
-      - ai-testops
+      - team9-ns
     labelSelectors:
       app: kafka
   loss:
@@ -36,13 +36,13 @@ apiVersion: chaos-mesh.org/v1alpha1
 kind: NetworkChaos
 metadata:
   name: kafka-consumer-partition
-  namespace: ai-testops
+  namespace: team9-ns
 spec:
   action: partition
   mode: all
   selector:
     namespaces:
-      - ai-testops
+      - team9-ns
     labelSelectors:
       app: test-execute-consumer
   direction: to
@@ -50,7 +50,7 @@ spec:
     mode: all
     selector:
       namespaces:
-        - ai-testops
+        - team9-ns
       labelSelectors:
         app: kafka
   duration: "30s"

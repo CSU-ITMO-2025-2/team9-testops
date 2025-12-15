@@ -24,6 +24,7 @@ spec:
     syncOptions:
       - SyncTimeout=1200
       - SkipDryRunOnMissingResource=true
+      - PruneLast=true
     retry:
       limit: 5
       backoff:

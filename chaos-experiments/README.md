@@ -60,13 +60,13 @@ Monitor the system during chaos experiments:
 
 ```bash
 # Watch pod status
-kubectl get pods -n ai-testops -w
+kubectl get pods -n team9-ns -w
 
 # Check HPA status
-kubectl get hpa -n ai-testops -w
+kubectl get hpa -n team9-ns -w
 
 # View logs
-kubectl logs -n ai-testops -l app=django-app --tail=100 -f
+kubectl logs -n team9-ns -l app=django-app --tail=100 -f
 ```
 
 ## Stopping Experiments

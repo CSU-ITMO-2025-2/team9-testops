@@ -313,11 +313,11 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: ai-testops-project
+  name: team9-project
   namespace: argocd
 spec:
   destinations:
-    - namespace: 'ai-testops-*'
+    - namespace: 'team9-*'
       server: https://kubernetes.default.svc
   sourceRepos:
     - https://github.com/CSU-ITMO-2025-2/team9-testops.git

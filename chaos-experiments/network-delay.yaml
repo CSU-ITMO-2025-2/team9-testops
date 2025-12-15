@@ -2,13 +2,13 @@ apiVersion: chaos-mesh.org/v1alpha1
 kind: NetworkChaos
 metadata:
   name: network-delay-kafka
-  namespace: ai-testops
+  namespace: team9-ns
 spec:
   action: delay
   mode: all
   selector:
     namespaces:
-      - ai-testops
+      - team9-ns
     labelSelectors:
       app: kafka
   delay:
@@ -22,13 +22,13 @@ apiVersion: chaos-mesh.org/v1alpha1
 kind: NetworkChaos
 metadata:
   name: network-delay-postgres
-  namespace: ai-testops
+  namespace: team9-ns
 spec:
   action: delay
   mode: one
   selector:
     namespaces:
-      - ai-testops
+      - team9-ns
     labelSelectors:
       app: postgres
   delay:
@@ -41,7 +41,7 @@ spec:
     mode: all
     selector:
       namespaces:
-        - ai-testops
+        - team9-ns
       labelSelectors:
         app: django-app
 ---
@@ -49,13 +49,13 @@ apiVersion: chaos-mesh.org/v1alpha1
 kind: NetworkChaos
 metadata:
   name: network-partition
-  namespace: ai-testops
+  namespace: team9-ns
 spec:
   action: partition
   mode: all
   selector:
     namespaces:
-      - ai-testops
+      - team9-ns
     labelSelectors:
       app: test-execute-consumer
   direction: both

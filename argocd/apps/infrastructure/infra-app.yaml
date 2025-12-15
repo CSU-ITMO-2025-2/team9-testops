@@ -16,7 +16,7 @@ spec:
       values: |
         # Enable all infrastructure components
         postgres:
-          enabled: true
+          enabled: false
         kafka:
           enabled: true
   
@@ -32,6 +32,7 @@ spec:
       - CreateNamespace=true
       - SyncTimeout=1200
       - SkipDryRunOnMissingResource=true
+      - PruneLast=true
     retry:
       limit: 5
       backoff:

@@ -2,7 +2,7 @@ apiVersion: chaos-mesh.org/v1alpha1
 kind: Workflow
 metadata:
   name: comprehensive-chaos-test
-  namespace: ai-testops
+  namespace: team9-ns
 spec:
   entry: entry
   templates:
@@ -23,7 +23,7 @@ spec:
         mode: one
         selector:
           namespaces:
-            - ai-testops
+            - team9-ns
           labelSelectors:
             app: django-app
     
@@ -35,7 +35,7 @@ spec:
         mode: all
         selector:
           namespaces:
-            - ai-testops
+            - team9-ns
           labelSelectors:
             app: kafka
         delay:
@@ -51,7 +51,7 @@ spec:
         value: "1"
         selector:
           namespaces:
-            - ai-testops
+            - team9-ns
           labelSelectors:
             app: test-execute-consumer
         stressors:

@@ -2,12 +2,12 @@ apiVersion: chaos-mesh.org/v1alpha1
 kind: StressChaos
 metadata:
   name: cpu-stress-django
-  namespace: ai-testops
+  namespace: team9-ns
 spec:
   mode: one
   selector:
     namespaces:
-      - ai-testops
+      - team9-ns
     labelSelectors:
       app: django-app
   stressors:
@@ -20,13 +20,13 @@ apiVersion: chaos-mesh.org/v1alpha1
 kind: StressChaos
 metadata:
   name: cpu-stress-consumer
-  namespace: ai-testops
+  namespace: team9-ns
 spec:
   mode: fixed
   value: "1"
   selector:
     namespaces:
-      - ai-testops
+      - team9-ns
     labelSelectors:
       app: test-execute-consumer
   stressors:

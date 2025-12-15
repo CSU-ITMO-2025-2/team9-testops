@@ -31,3 +31,4 @@ spec:
       - SyncTimeout=1200
       - RespectIgnoreDifferences=true
       - SkipDryRunOnMissingResource=true
+      - PruneLast=true
