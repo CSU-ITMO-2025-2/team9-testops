@@ -2,6 +2,19 @@ apiVersion: v1
 entries:
   team9-consumer:
   - apiVersion: v2
+    appVersion: 9f5ea41
+    created: "2025-12-15T10:17:31.620141006Z"
+    description: Consumer service for TestOps platform
+    digest: a413400a187807c6978080369600446ee8e9750aae08d17d71b9ae68aff592d5
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-consumer
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-consumer-1.1.17/team9-consumer-1.1.17.tgz
+    version: 1.1.17
+  - apiVersion: v2
     appVersion: 6a87f52
     created: "2025-12-15T09:57:55.235684494Z"
     description: Consumer service for TestOps platform
@@ -93,6 +106,36 @@ entries:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-consumer-1.1.10/team9-consumer-1.1.10.tgz
     version: 1.1.10
   team9-infra:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-12-15T10:17:31.819513825Z"
+    dependencies:
+    - condition: postgres.enabled
+      name: postgres
+      repository: ""
+      version: 1.0.0
+    - condition: kafka.enabled
+      name: kafka
+      repository: ""
+      version: 1.0.0
+    - name: shared
+      repository: ""
+      version: 1.0.0
+    - condition: prometheus.enabled
+      name: prometheus
+      repository: ""
+      version: 1.0.0
+    description: Infrastructure components for TestOps platform (PostgreSQL, Kafka,
+      shared resources)
+    digest: f3e0168537aaf715e2809dc624a8e0dd8600340ddef12ab223c65ff61b950c55
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-infra
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-infra-1.2.29/team9-infra-1.2.29.tgz
+    version: 1.2.29
   - apiVersion: v2
     appVersion: 1.0.0
     created: "2025-12-15T09:57:55.567830382Z"
@@ -336,6 +379,19 @@ entries:
   team9-postdeploy:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2025-12-15T10:17:31.99814902Z"
+    description: Post-deployment resources for TestOps (NetworkPolicies, Monitoring)
+    digest: 7cc63d20e606a05fba27d06b56037a44af5332075ece17a37524c04670e330e6
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-postdeploy
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-postdeploy-1.1.21/team9-postdeploy-1.1.21.tgz
+    version: 1.1.21
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2025-12-15T09:57:55.959337868Z"
     description: Post-deployment resources for TestOps (NetworkPolicies, Monitoring)
     digest: a2d384c964203240903224ffb7784fd76c223ca0dd471754b942d1186d5ddd32
@@ -426,6 +482,30 @@ entries:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-postdeploy-1.1.14/team9-postdeploy-1.1.14.tgz
     version: 1.1.14
   team9-publisher:
+  - annotations:
+      keda.sh/installation: |
+        Install KEDA before deploying this chart:
+        kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.12.0/keda-2.12.0.yaml
+      keda.sh/required: "true"
+    apiVersion: v2
+    appVersion: 9f5ea41
+    created: "2025-12-15T10:17:32.172930659Z"
+    description: Publisher service for TestOps platform
+    digest: 6832d71ac754ad3c3005a3dc178b72f7cb18ce7f7321a3972cec3621802dea63
+    keywords:
+    - ai
+    - testing
+    - kafka
+    - microservices
+    - keda
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-publisher
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-publisher-1.4.18/team9-publisher-1.4.18.tgz
+    version: 1.4.18
   - annotations:
       keda.sh/installation: |
         Install KEDA before deploying this chart:
@@ -678,4 +758,4 @@ entries:
     urls:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/testops-publisher-1.4.10/testops-publisher-1.4.10.tgz
     version: 1.4.10
-generated: "2025-12-15T09:57:56.230708274Z"
+generated: "2025-12-15T10:17:32.173064571Z"
