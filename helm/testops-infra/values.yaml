@@ -32,7 +32,7 @@ global:
     persistence:
       enabled: true
       size: 3Gi
-      storageClass: "standard"
+      storageClass: ""
     config:
       brokerId: 1
       replicationFactor: 1
