@@ -22,16 +22,6 @@ spec:
     spec:
       serviceAccountName: team9-publisher-sa
       initContainers:
-      - name: wait-for-postgres
-        image: busybox:1.28
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "50m"
-          limits:
-            memory: "128Mi"
-            cpu: "100m"
-        command: ['sh', '-c', 'until nc -z {{ .Values.postgres.name }}.{{ .Values.namespace }}.svc.cluster.local {{ .Values.postgres.service.port }}; do echo waiting for postgres; sleep 2; done;']
       - name: wait-for-kafka
         image: busybox:1.28
         resources:
