@@ -1,0 +1,57 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: team9-kafka
+  namespace: team9-ns
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  entityOperator:
+    topicOperator:
+      resources:
+        limits:
+          cpu: 200m
+          memory: 512Mi
+        requests:
+          cpu: 100m
+          memory: 256Mi
+    userOperator:
+      resources:
+        limits:
+          cpu: 200m
+          memory: 512Mi
+        requests:
+          cpu: 100m
+          memory: 256Mi
+  kafka:
+    listeners:
+      - authentication:
+          type: scram-sha-512
+        name: tls
+        port: 9093
+        tls: true
+        type: internal
+      - name: plain
+        port: 9092
+        type: internal
+    replicas: 2
+    storage:
+      type: ephemeral
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 250m
+      limits:
+        memory: 1Gi
+        cpu: 500m
+  zookeeper:
+    replicas: 2
+    storage:
+      type: ephemeral
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+      limits:
+        memory: 512Mi
+        cpu: 200m

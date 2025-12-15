@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: team9-strimzi-operator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: team9
+  
+  source:
+    repoURL: https://strimzi.io/charts
+    chart: strimzi-kafka-operator
+    targetRevision: "0.49.1"
+    helm:
+      values: |
+        namespace: team9-ns
+        replicas: 1
+        resources:
+          limits:
+            memory: 256Mi
+            cpu: 200m
+          requests:
+            memory: 256Mi
+            cpu: 200m
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: team9-ns
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - SyncTimeout=1200
+      - SkipDryRunOnMissingResource=true
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 20m

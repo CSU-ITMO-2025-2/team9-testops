@@ -11,38 +11,17 @@ global:
   # PostgreSQL Database
   postgres:
     enabled: false
-    # Using external database
+    # Using external database - password from secret
     external:
       host: 79.174.89.43
       port: 18809
       database: team9_db
       username: team9
-      password: Er3dNsZ6#b8Lh0vP
+      # passwordSecretRef: team9-db-secret (to be created separately)
 
-  # Kafka
+  # Kafka - disabled, using Strimzi instead
   kafka:
-    enabled: true
-    name: kafka
-    image:
-      repository: apache/kafka
-      tag: "3.9.0"
-    service:
-      type: ClusterIP
-      port: 9092
-    persistence:
-      enabled: true
-      size: 3Gi
-      storageClass: ""
-    config:
-      brokerId: 1
-      replicationFactor: 1
-    resources:
-      requests:
-        memory: "256Mi"
-        cpu: "200m"
-      limits:
-        memory: "512Mi"
-        cpu: "400m"
+    enabled: false
 
   # Django settings (for configmap)
   django:
