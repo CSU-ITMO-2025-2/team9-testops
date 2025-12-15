@@ -1,0 +1,59 @@
+{{- if .Values.global.strimzi.kafka.enabled }}
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: {{ .Values.global.strimzi.kafka.name }}
+  namespace: {{ .Values.global.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  entityOperator:
+    topicOperator:
+      resources:
+        limits:
+          cpu: {{ .Values.global.strimzi.kafka.topicOperator.resources.limits.cpu }}
+          memory: {{ .Values.global.strimzi.kafka.topicOperator.resources.limits.memory }}
+        requests:
+          cpu: {{ .Values.global.strimzi.kafka.topicOperator.resources.requests.cpu }}
+          memory: {{ .Values.global.strimzi.kafka.topicOperator.resources.requests.memory }}
+    userOperator:
+      resources:
+        limits:
+          cpu: {{ .Values.global.strimzi.kafka.userOperator.resources.limits.cpu }}
+          memory: {{ .Values.global.strimzi.kafka.userOperator.resources.limits.memory }}
+        requests:
+          cpu: {{ .Values.global.strimzi.kafka.userOperator.resources.requests.cpu }}
+          memory: {{ .Values.global.strimzi.kafka.userOperator.resources.requests.memory }}
+  kafka:
+    listeners:
+      - authentication:
+          type: scram-sha-512
+        name: tls
+        port: 9093
+        tls: true
+        type: internal
+      - name: plain
+        port: 9092
+        type: internal
+    replicas: {{ .Values.global.strimzi.kafka.brokers.replicas }}
+    storage:
+      type: {{ .Values.global.strimzi.kafka.storage.type }}
+    resources:
+      requests:
+        memory: {{ .Values.global.strimzi.kafka.brokers.resources.requests.memory }}
+        cpu: {{ .Values.global.strimzi.kafka.brokers.resources.requests.cpu }}
+      limits:
+        memory: {{ .Values.global.strimzi.kafka.brokers.resources.limits.memory }}
+        cpu: {{ .Values.global.strimzi.kafka.brokers.resources.limits.cpu }}
+  zookeeper:
+    replicas: {{ .Values.global.strimzi.kafka.zookeeper.replicas }}
+    storage:
+      type: {{ .Values.global.strimzi.kafka.storage.type }}
+    resources:
+      requests:
+        memory: {{ .Values.global.strimzi.kafka.zookeeper.resources.requests.memory }}
+        cpu: {{ .Values.global.strimzi.kafka.zookeeper.resources.requests.cpu }}
+      limits:
+        memory: {{ .Values.global.strimzi.kafka.zookeeper.resources.limits.memory }}
+        cpu: {{ .Values.global.strimzi.kafka.zookeeper.resources.limits.cpu }}
+{{- end }}

@@ -23,6 +23,48 @@ global:
   kafka:
     enabled: false
 
+  # Strimzi Kafka Cluster
+  strimzi:
+    kafka:
+      enabled: true
+      name: team9-kafka
+      brokers:
+        replicas: 2
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: 250m
+          limits:
+            memory: 1Gi
+            cpu: 500m
+      zookeeper:
+        replicas: 2
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: 100m
+          limits:
+            memory: 512Mi
+            cpu: 200m
+      topicOperator:
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: 100m
+          limits:
+            memory: 512Mi
+            cpu: 200m
+      userOperator:
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: 100m
+          limits:
+            memory: 512Mi
+            cpu: 200m
+      storage:
+        type: ephemeral
+
   # Django settings (for configmap)
   django:
     secretKey: "django-insecure-change-this-in-production-k8s-secret-key-12345"
