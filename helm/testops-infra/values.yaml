@@ -23,11 +23,13 @@ global:
   kafka:
     enabled: false
 
-  # Strimzi Kafka Cluster
+  # Strimzi Kafka Cluster (KRaft Mode - no ZooKeeper)
   strimzi:
     kafka:
       enabled: true
       name: team9-kafka
+      version: "4.1.1"
+      metadataVersion: "4.1-IV1"
       brokers:
         replicas: 2
         resources:
@@ -37,8 +39,8 @@ global:
           limits:
             memory: 1Gi
             cpu: 500m
-      zookeeper:
-        replicas: 2
+      controller:
+        replicas: 1
         resources:
           requests:
             memory: 256Mi
@@ -63,7 +65,10 @@ global:
             memory: 512Mi
             cpu: 200m
       storage:
-        type: ephemeral
+        type: persistent-claim
+        size: 10Gi
+        controllerSize: 5Gi
+      minInSyncReplicas: 1
 
   # Django App reference (for configmap/secrets)
   djangoApp:
