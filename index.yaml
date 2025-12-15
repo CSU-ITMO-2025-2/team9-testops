@@ -108,6 +108,36 @@ entries:
   team9-infra:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2025-12-15T10:45:18.659604872Z"
+    dependencies:
+    - condition: postgres.enabled
+      name: postgres
+      repository: ""
+      version: 1.0.0
+    - condition: kafka.enabled
+      name: kafka
+      repository: ""
+      version: 1.0.0
+    - name: shared
+      repository: ""
+      version: 1.0.0
+    - condition: prometheus.enabled
+      name: prometheus
+      repository: ""
+      version: 1.0.0
+    description: Infrastructure components for TestOps platform (PostgreSQL, Kafka,
+      shared resources)
+    digest: b3d17b1f2e9735d6bb568be9a84c135924d13f585f8c93a11e2ea41d15ba7a25
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-infra
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-infra-1.2.31/team9-infra-1.2.31.tgz
+    version: 1.2.31
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2025-12-15T10:24:49.138456682Z"
     dependencies:
     - condition: postgres.enabled
@@ -788,4 +818,4 @@ entries:
     urls:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/testops-publisher-1.4.10/testops-publisher-1.4.10.tgz
     version: 1.4.10
-generated: "2025-12-15T10:24:49.138537854Z"
+generated: "2025-12-15T10:45:18.659678259Z"
