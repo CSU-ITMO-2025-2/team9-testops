@@ -41,7 +41,7 @@ spec:
         - name: KAFKA_CONTROLLER_LISTENER_NAMES
           value: "CONTROLLER"
         - name: KAFKA_CONTROLLER_QUORUM_VOTERS
-          value: "1@{{ .Values.global.kafka.name }}.{{ .Values.global.namespace }}.svc.cluster.local:9093"
+          value: "1@localhost:9093"
         - name: KAFKA_PROCESS_ROLES
           value: "broker,controller"
         - name: KAFKA_NODE_ID
