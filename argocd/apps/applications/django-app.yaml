@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ai-testops-django
+  name: team9-publisher
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "4"
