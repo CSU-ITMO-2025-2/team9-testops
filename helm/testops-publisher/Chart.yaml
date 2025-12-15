@@ -2,8 +2,8 @@ apiVersion: v2
 name: team9-publisher
 description: Publisher service for TestOps platform
 type: application
-version: 1.4.12
-appVersion: "3bd4ee3"
+version: 1.4.13
+appVersion: "fdb1339"
 keywords:
   - ai
   - testing
