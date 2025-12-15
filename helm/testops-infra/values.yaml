@@ -24,22 +24,23 @@ global:
     enabled: true
     name: kafka
     image:
-      repository: bitnami/kafka
-      tag: "latest"
+      repository: apache/kafka
+      tag: "3.9.0"
     service:
       type: ClusterIP
       port: 9092
     persistence:
       enabled: false
+    config:
+      brokerId: 1
+      replicationFactor: 1
     resources:
       requests:
-        memory: 512Mi
-        cpu: 250m
+        memory: "256Mi"
+        cpu: "200m"
       limits:
-        memory: 1Gi
-        cpu: 500m
-    config:
-      replicationFactor: 1
+        memory: "512Mi"
+        cpu: "400m"
 
   # Strimzi Kafka Cluster (disabled - using standard Kafka)
   strimzi:
