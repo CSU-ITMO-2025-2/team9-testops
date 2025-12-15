@@ -10,7 +10,7 @@ spec:
   
   source:
     repoURL: https://csu-itmo-2025-2.github.io/team9-testops
-    chart: testops-publisher
+    chart: team9-publisher
     targetRevision: "1.*.*"
   
   destination:

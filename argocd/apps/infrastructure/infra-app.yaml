@@ -10,7 +10,7 @@ spec:
   
   source:
     repoURL: https://csu-itmo-2025-2.github.io/team9-testops
-    chart: testops-infra
+    chart: team9-infra
     targetRevision: "1.*.*"
     helm:
       values: |

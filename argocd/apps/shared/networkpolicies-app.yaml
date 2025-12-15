@@ -10,7 +10,7 @@ spec:
   
   source:
     repoURL: https://csu-itmo-2025-2.github.io/team9-testops
-    chart: testops-postdeploy
+    chart: team9-postdeploy
     targetRevision: "1.*.*"
     helm:
       values: |
