@@ -19,8 +19,6 @@ spec:
           enabled: false
         prometheus:
           enabled: true
-          rbac:
-            create: false
         kafka:
           enabled: true
   
@@ -50,7 +48,3 @@ spec:
       jsonPointers:
         - /data
         - /stringData
-    - group: rbac.authorization.k8s.io
-      kind: ClusterRole
-    - group: rbac.authorization.k8s.io
-      kind: ClusterRoleBinding
