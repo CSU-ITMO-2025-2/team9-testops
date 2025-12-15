@@ -65,10 +65,6 @@ global:
       storage:
         type: ephemeral
 
-  # Django settings (for configmap)
-  django:
-    secretKey: "django-insecure-change-this-in-production-k8s-secret-key-12345"
-
   # Django App reference (for configmap/secrets)
   djangoApp:
     name: team9-publisher
@@ -77,12 +73,13 @@ global:
   rbac:
     enabled: true
 
-  # Secrets
+  # Secrets - all moved to Vault via ExternalSecrets
+  # Create in Vault:
+  # - kv/team9/postgres: password
+  # - kv/team9/django: secret_key
+  # - kv/team9/api-keys: gemini_api_key, google_oauth2_key, google_oauth2_secret, grafana_cloud_api_key
   secrets:
-    geminiApiKey: "YOUR_GEMINI_API_KEY_HERE"
-    googleOauth2Key: ""
-    googleOauth2Secret: ""
-    grafanaCloudApiKey: ""
+    enabled: true
 
   # Monitoring
   monitoring:

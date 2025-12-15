@@ -34,6 +34,7 @@ spec:
         type: internal
       - name: plain
         port: 9092
+        tls: false
         type: internal
     replicas: {{ .Values.global.strimzi.kafka.brokers.replicas }}
     storage:
