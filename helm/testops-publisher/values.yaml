@@ -57,4 +57,10 @@ ingress:
           pathType: Prefix
           service: testops-publisher
           port: 8000
+    - host: team9.kubepractice.ru
+      paths:
+        - path: /
+          pathType: Prefix
+          service: testops-publisher
+          port: 8000
   tls: []
