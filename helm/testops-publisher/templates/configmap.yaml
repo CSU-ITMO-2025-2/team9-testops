@@ -9,9 +9,9 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 data:
-  POSTGRES_HOST: {{ .Values.postgres.external.host | quote }}
-  POSTGRES_PORT: {{ .Values.postgres.external.port | quote }}
-  POSTGRES_DB: {{ .Values.postgres.external.database | quote }}
+  POSTGRES_HOST: "79.174.89.43"
+  POSTGRES_PORT: "18809"
+  POSTGRES_DB: "team9_db"
   KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.kafka.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.kafka.service.port }}"
   SECRET_KEY: "django-secret-key-change-in-production"
   SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI: "http://testops.thduc.tech/auth/complete/google/"
@@ -30,5 +30,5 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 data:
-  POSTGRES_DB: {{ .Values.postgres.external.database | quote }}
+  POSTGRES_DB: "team9_db"
 {{- end }}
