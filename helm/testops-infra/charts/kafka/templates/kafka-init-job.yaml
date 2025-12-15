@@ -20,6 +20,13 @@ spec:
       initContainers:
       - name: wait-for-kafka
         image: busybox:1.28
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
         command: 
           - sh
           - -c
@@ -34,6 +41,13 @@ spec:
       containers:
       - name: kafka-topic-creator
         image: "{{ .Values.global.kafka.image.repository }}:{{ .Values.global.kafka.image.tag }}"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
         command:
           - sh
           - -c
