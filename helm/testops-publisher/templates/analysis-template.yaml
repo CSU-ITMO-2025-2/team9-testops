@@ -1,0 +1,53 @@
+{{- if .Values.djangoApp.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ .Values.djangoApp.name }}-analysis
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "ai-testops.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  metrics:
+  - name: error-rate
+    interval: 30s
+    count: 3
+    failureCondition: result[0] >= 0.05
+    successCondition: result[0] < 0.05
+    provider:
+      prometheus:
+        address: {{ .Values.monitoring.grafana.prometheusUrl | quote }}
+        query: |
+          sum(
+            rate(
+              http_requests_total{
+                job="django-app",
+                namespace="{{ .Values.namespace }}",
+                status=~"5.."
+              }[1m]
+            )
+          )
+          /
+          sum(
+            rate(
+              http_requests_total{
+                job="django-app",
+                namespace="{{ .Values.namespace }}"
+              }[1m]
+            )
+          )
+
+  - name: cpu-usage
+    interval: 30s
+    count: 3
+    failureCondition: result[0] > 0.8
+    successCondition: result[0] < 0.7
+    provider:
+      prometheus:
+        address: {{ .Values.monitoring.grafana.prometheusUrl | quote }}
+        query: |
+          sum(rate(container_cpu_usage_seconds_total{pod=~"{{ .Values.djangoApp.name }}-.*"}[1m]))
+          /
+          sum(container_spec_cpu_quota{pod=~"{{ .Values.djangoApp.name }}-.*"})
+{{- end }}

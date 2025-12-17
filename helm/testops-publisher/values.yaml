@@ -2,6 +2,11 @@
 
 namespace: team9-ns
 
+# Monitoring
+monitoring:
+  grafana:
+    prometheusUrl: "https://prometheus-prod-43-prod-ap-south-1.grafana.net/api/prom"
+
 # Global image settings
 image:
   pullPolicy: Always
