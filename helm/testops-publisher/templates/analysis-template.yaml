@@ -10,7 +10,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "3"
 spec:
   args:
-  - name: grafana-api-key
+  - name: grafana-auth
     valueFrom:
       secretKeyRef:
         name: api-keys-secret
@@ -27,7 +27,7 @@ spec:
         address: {{ .Values.monitoring.grafana.prometheusUrl | quote }}
         headers:
         - key: Authorization
-          value: "Bearer {{`{{args.grafana-api-key}}`}}"
+          value: "Basic {{`{{args.grafana-auth}}`}}"
         query: |
           (
             sum(rate(http_requests_total{
@@ -54,7 +54,7 @@ spec:
         address: {{ .Values.monitoring.grafana.prometheusUrl | quote }}
         headers:
         - key: Authorization
-          value: "Bearer {{`{{args.grafana-api-key}}`}}"
+          value: "Basic {{`{{args.grafana-auth}}`}}"
         query: |
           sum(rate(container_cpu_usage_seconds_total{
             pod=~"{{ .Values.djangoApp.name }}-.*",
