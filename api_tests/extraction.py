@@ -18,7 +18,7 @@ def parse_swagger_from_url(url):
     elif 'json' in content_type or 'json' in url:
         swagger_data = response.json()
     else:
-        raise ValueError("Sorry, unsupported Swagger format. Only YAML and JSON are supported.")
+        raise ValueError("Sorry! unsupported Swagger format. Only YAML and JSON are supported.")
     return swagger_data
 
 def get_base_url(swagger_url):
