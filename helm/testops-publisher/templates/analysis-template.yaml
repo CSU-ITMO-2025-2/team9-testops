@@ -9,12 +9,14 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
+  # GRAFANA_BASIC_AUTH must be base64 encoded value of "username:api_key"
+  # Example: echo -n "2849703:glc_xxx" | base64
   args:
   - name: grafana-auth
     valueFrom:
       secretKeyRef:
         name: api-keys-secret
-        key: GRAFANA_CLOUD_API_KEY
+        key: GRAFANA_BASIC_AUTH
   metrics:
   - name: error-rate
     interval: 30s
