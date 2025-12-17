@@ -58,13 +58,16 @@ spec:
         - key: Authorization
           value: "Basic {{`{{args.grafana-auth}}`}}"
         query: |
-          sum(rate(container_cpu_usage_seconds_total{
-            pod=~"{{ .Values.djangoApp.name }}-.*",
-            container!="POD"
-          }[1m]))
-          /
-          sum(kube_pod_container_resource_requests{
-            pod=~"{{ .Values.djangoApp.name }}-.*",
-            resource="cpu"
-          })
+          (
+            sum(rate(container_cpu_usage_seconds_total{
+              pod=~"{{ .Values.djangoApp.name }}-.*",
+              container!="POD"
+            }[1m]))
+            /
+            sum(kube_pod_container_resource_requests{
+              pod=~"{{ .Values.djangoApp.name }}-.*",
+              resource="cpu"
+            })
+          )
+          or vector(0)
 {{- end }}

@@ -94,6 +94,32 @@ data:
             action: replace
             target_label: kubernetes_pod_name
 
+      # Kubelet cAdvisor metrics (container CPU, memory, etc.)
+      - job_name: 'kubernetes-cadvisor'
+        kubernetes_sd_configs:
+          - role: node
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        metrics_path: /metrics/cadvisor
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+          - target_label: __address__
+            replacement: kubernetes.default.svc:443
+          - source_labels: [__meta_kubernetes_node_name]
+            regex: (.+)
+            target_label: __metrics_path__
+            replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+
+      # Kube-state-metrics (pod resource requests, deployment status, etc.)
+      - job_name: 'kube-state-metrics'
+        static_configs:
+          - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080']
+        metrics_path: '/metrics'
+
     remote_write:
       - url: {{ .Values.global.monitoring.grafana.prometheusUrl }}
         basic_auth:
@@ -101,6 +127,6 @@ data:
           password_file: /etc/secrets/grafana-api-key
         write_relabel_configs:
           - source_labels: [__name__]
-            regex: '(test_cases_status|django_.*|http_.*|pg_.*|kafka_.*|node_.*|kube_.*)'
+            regex: '(test_cases_status|django_.*|http_.*|pg_.*|kafka_.*|node_.*|kube_.*|container_.*)'
             action: keep
 {{- end }}
