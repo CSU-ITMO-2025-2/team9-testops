@@ -88,7 +88,7 @@ global:
   # Ingress (needed for configmap)
   ingress:
     hosts:
-      - host: testops.thduc.tech
+      - host: team9.kubepractice.ru
 
 # Subchart conditions
 postgres:

@@ -52,7 +52,7 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:
-    - host: testops.thduc.tech
+    - host: team9.kubepractice.ru
       paths:
         - path: /
           pathType: Prefix
@@ -67,7 +67,7 @@ ingress:
   tls:
     - secretName: testops-tls
       hosts:
-        - testops.thduc.tech
+        - team9.kubepractice.ru
     - secretName: team9-kubepractice-tls
       hosts:
         - team9.kubepractice.ru
