@@ -47,9 +47,10 @@ ingress:
   enabled: true
   className: nginx
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:
     - host: testops.thduc.tech
       paths:
@@ -63,4 +64,10 @@ ingress:
           pathType: Prefix
           service: team9-publisher
           port: 8000
-  tls: []
+  tls:
+    - secretName: testops-tls
+      hosts:
+        - testops.thduc.tech
+    - secretName: team9-kubepractice-tls
+      hosts:
+        - team9.kubepractice.ru
