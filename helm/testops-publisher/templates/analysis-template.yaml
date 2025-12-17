@@ -9,15 +9,25 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
+  args:
+  - name: grafana-api-key
+    valueFrom:
+      secretKeyRef:
+        name: api-keys-secret
+        key: GRAFANA_CLOUD_API_KEY
   metrics:
   - name: error-rate
     interval: 30s
     count: 3
     failureCondition: result[0] >= 0.05
     successCondition: result[0] < 0.05
+    consecutiveErrorLimit: 8
     provider:
       prometheus:
         address: {{ .Values.monitoring.grafana.prometheusUrl | quote }}
+        headers:
+        - key: Authorization
+          value: "Bearer {{`{{args.grafana-api-key}}`}}"
         query: |
           (
             sum(rate(http_requests_total{
@@ -38,9 +48,13 @@ spec:
     count: 3
     failureCondition: result[0] > 0.8
     successCondition: result[0] < 0.7
+    consecutiveErrorLimit: 8
     provider:
       prometheus:
         address: {{ .Values.monitoring.grafana.prometheusUrl | quote }}
+        headers:
+        - key: Authorization
+          value: "Bearer {{`{{args.grafana-api-key}}`}}"
         query: |
           sum(rate(container_cpu_usage_seconds_total{
             pod=~"{{ .Values.djangoApp.name }}-.*",
