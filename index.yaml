@@ -1213,6 +1213,30 @@ entries:
         kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.12.0/keda-2.12.0.yaml
       keda.sh/required: "true"
     apiVersion: v2
+    appVersion: "6955981"
+    created: "2025-12-17T11:10:15.327593077Z"
+    description: Publisher service for TestOps platform
+    digest: de68f65681cd1bde7fb2d475971ce2aa2182bdfd53f6be3ec1179772df16d43b
+    keywords:
+    - ai
+    - testing
+    - kafka
+    - microservices
+    - keda
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-publisher
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-publisher-1.4.38/team9-publisher-1.4.38.tgz
+    version: 1.4.38
+  - annotations:
+      keda.sh/installation: |
+        Install KEDA before deploying this chart:
+        kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.12.0/keda-2.12.0.yaml
+      keda.sh/required: "true"
+    apiVersion: v2
     appVersion: cc619f9
     created: "2025-12-17T10:50:43.91070961Z"
     description: Publisher service for TestOps platform
@@ -1939,4 +1963,4 @@ entries:
     urls:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/testops-publisher-1.4.10/testops-publisher-1.4.10.tgz
     version: 1.4.10
-generated: "2025-12-17T10:50:43.91097231Z"
+generated: "2025-12-17T11:10:15.327945716Z"
