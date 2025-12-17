@@ -19,24 +19,19 @@ spec:
       prometheus:
         address: {{ .Values.monitoring.grafana.prometheusUrl | quote }}
         query: |
-          sum(
-            rate(
-              http_requests_total{
-                job="django-app",
-                namespace="{{ .Values.namespace }}",
-                status=~"5.."
-              }[1m]
-            )
-          )
+          (
+            sum(rate(http_requests_total{
+              job="django-app",
+              namespace="{{ .Values.namespace }}",
+              status=~"5.."
+            }[1m]))
           /
-          sum(
-            rate(
-              http_requests_total{
-                job="django-app",
-                namespace="{{ .Values.namespace }}"
-              }[1m]
-            )
+            sum(rate(http_requests_total{
+              job="django-app",
+              namespace="{{ .Values.namespace }}"
+            }[1m]))
           )
+          or vector(0)
 
   - name: cpu-usage
     interval: 30s
@@ -47,7 +42,13 @@ spec:
       prometheus:
         address: {{ .Values.monitoring.grafana.prometheusUrl | quote }}
         query: |
-          sum(rate(container_cpu_usage_seconds_total{pod=~"{{ .Values.djangoApp.name }}-.*"}[1m]))
+          sum(rate(container_cpu_usage_seconds_total{
+            pod=~"{{ .Values.djangoApp.name }}-.*",
+            container!="POD"
+          }[1m]))
           /
-          sum(container_spec_cpu_quota{pod=~"{{ .Values.djangoApp.name }}-.*"})
+          sum(kube_pod_container_resource_requests{
+            pod=~"{{ .Values.djangoApp.name }}-.*",
+            resource="cpu"
+          })
 {{- end }}
