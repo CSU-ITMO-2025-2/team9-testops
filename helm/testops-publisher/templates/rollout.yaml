@@ -153,7 +153,7 @@ spec:
       - setWeight: 100
       analysis:
         templates:
-        - name: {{ .Values.djangoApp.name }}-analysis
+        - name: team9-publisher-analysis
           args:
             metrics:
             - name: error-rate
