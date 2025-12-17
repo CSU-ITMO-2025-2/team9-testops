@@ -147,6 +147,36 @@ entries:
   team9-infra:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2025-12-17T08:09:27.175963443Z"
+    dependencies:
+    - condition: postgres.enabled
+      name: postgres
+      repository: ""
+      version: 1.0.0
+    - condition: kafka.enabled
+      name: kafka
+      repository: ""
+      version: 1.0.0
+    - name: shared
+      repository: ""
+      version: 1.0.0
+    - condition: prometheus.enabled
+      name: prometheus
+      repository: ""
+      version: 1.0.0
+    description: Infrastructure components for TestOps platform (PostgreSQL, Kafka,
+      shared resources)
+    digest: 022824ecae713793088c106ec19820b1dc8e8f749db63610f55af46b3f797ffd
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-infra
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-infra-1.2.51/team9-infra-1.2.51.tgz
+    version: 1.2.51
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2025-12-15T13:48:23.341959254Z"
     dependencies:
     - condition: postgres.enabled
@@ -1183,6 +1213,30 @@ entries:
         kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.12.0/keda-2.12.0.yaml
       keda.sh/required: "true"
     apiVersion: v2
+    appVersion: c0c1410
+    created: "2025-12-17T08:09:27.436275329Z"
+    description: Publisher service for TestOps platform
+    digest: ca520a9b1e6fcd9de8f9ae2ce081bf99383c6684e6b555a121d92dec5baa47ce
+    keywords:
+    - ai
+    - testing
+    - kafka
+    - microservices
+    - keda
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-publisher
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-publisher-1.4.25/team9-publisher-1.4.25.tgz
+    version: 1.4.25
+  - annotations:
+      keda.sh/installation: |
+        Install KEDA before deploying this chart:
+        kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.12.0/keda-2.12.0.yaml
+      keda.sh/required: "true"
+    apiVersion: v2
     appVersion: 5fc51f7
     created: "2025-12-17T07:59:08.192384251Z"
     description: Publisher service for TestOps platform
@@ -1597,4 +1651,4 @@ entries:
     urls:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/testops-publisher-1.4.10/testops-publisher-1.4.10.tgz
     version: 1.4.10
-generated: "2025-12-17T07:59:08.19259386Z"
+generated: "2025-12-17T08:09:27.436856971Z"
