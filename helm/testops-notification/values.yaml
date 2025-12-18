@@ -1,0 +1,30 @@
+# Default values for team9-notification
+
+namespace: team9-ns
+
+image:
+  repository: vanlahuynhduc/ai-testops-notification
+  tag: "latest"
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8002
+  metricsPort: 8002
+
+env:
+  KAFKA_BOOTSTRAP_SERVERS: "kafka.testops.svc.cluster.local:9092"
+
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "50m"
+  limits:
+    memory: "128Mi"
+    cpu: "100m"
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80

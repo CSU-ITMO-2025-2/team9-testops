@@ -1,119 +1,251 @@
 {% load socialaccount %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Testops</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <title>AI TestOps - Intelligent API Testing</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Animate.css -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
     <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #ec4899;
+            --dark: #0f172a;
+        }
+
         body {
-            font-family: 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #71b7e6, #9b59b6);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--dark);
             height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             overflow: hidden;
-        }
-        .container {
-            text-align: center;
-            background-color: #fff;
-            padding: 3rem;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            width: 100%;
-            animation: fadeIn 1s ease-in-out;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-        .btn {
-            display: inline-block;
-            padding: 12px 25px;
-            margin-top: 20px;
-            font-size: 16px;
             color: #fff;
-            background-color: #4285F4;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background-color 0.3s ease, transform 0.3s ease;
+            position: relative;
         }
-        .btn i {
-            margin-right: 8px;
-        }
-        .btn:hover {
-            background-color: #357ae8;
-            transform: translateY(-2px);
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
+
+        /* Animated Background */
+        .bg-shapes {
+            position: absolute;
             top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
-            background-color: rgb(0, 0, 0);
-            background-color: rgba(0, 0, 0, 0.4);
+            z-index: 0;
+            overflow: hidden;
         }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 500px;
-            border-radius: 8px;
+
+        .shape {
+            position: absolute;
+            filter: blur(80px);
+            opacity: 0.6;
+            animation: float 20s infinite ease-in-out alternate;
         }
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
+
+        .shape-1 {
+            width: 500px;
+            height: 500px;
+            background: var(--primary);
+            top: -100px;
+            left: -100px;
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
         }
-        .close:hover,
-        .close:focus {
-            color: black;
+
+        .shape-2 {
+            width: 400px;
+            height: 400px;
+            background: var(--secondary);
+            bottom: -50px;
+            right: -50px;
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(30px, 50px) rotate(20deg);
+            }
+        }
+
+        /* Main Card */
+        .login-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 3.5rem;
+            width: 100%;
+            max-width: 480px;
+            z-index: 10;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        .brand-icon {
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, #fff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+        }
+
+        h1 {
+            font-weight: 700;
+            font-size: 2.25rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        p.subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .btn-custom {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1rem;
             text-decoration: none;
-            cursor: pointer;
         }
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+
+        .btn-primary-custom {
+            background: #fff;
+            color: var(--primary);
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            background: #f8fafc;
+            color: var(--primary-hover);
+        }
+
+        .btn-google {
+            background: #fff;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .btn-google:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 1.5rem 0;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .divider:not(:empty)::before {
+            margin-right: .5em;
+        }
+
+        .divider:not(:empty)::after {
+            margin-left: .5em;
+        }
+
+        .user-pill {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
+
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
+
+    <div class="login-card animate__animated animate__fadeInUp">
+        <div class="brand-icon">
+            <i class="bi bi-robot"></i>
+        </div>
         <h1>AI TestOps</h1>
+        <p class="subtitle">Automated API Testing with Intelligence</p>
+
         {% if user.is_authenticated %}
-        <p>Welcome. You are logged in as {{ user.username }}</p>
-        <a class="btn" href="{% url 'parse_and_test' %}">
-            <i class="fas fa-eye"></i> View Test Result
+        <div class="user-pill">
+            <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center fw-bold"
+                style="width: 40px; height: 40px;">
+                {{ user.username|first|upper }}
+            </div>
+            <div class="text-start">
+                <div class="small text-muted">Signed in as</div>
+                <div class="fw-bold">{{ user.username }}</div>
+            </div>
+        </div>
+
+        <a class="btn-custom btn-primary-custom mb-3" href="{% url 'parse_and_test' %}">
+            <i class="bi bi-speedometer2"></i> Dashboard
+            <i class="bi bi-arrow-right ms-auto"></i>
         </a>
-        <a class="btn" href="{% url 'account_logout' %}">
-            <i class="fas fa-sign-out-alt"></i> Logout
+
+        <a class="btn-custom btn-outline-light text-white border" href="{% url 'account_logout' %}"
+            style="background: transparent; border-color: rgba(255,255,255,0.3) !important;">
+            <i class="bi bi-box-arrow-right"></i> Sign Out
         </a>
         {% else %}
-        <a class="btn" href="{% provider_login_url 'google' %}">
-            <i class="fab fa-google"></i> Login with Google
+        <a class="btn-custom btn-google" href="{% provider_login_url 'google' %}">
+            <i class="fab fa-google text-danger"></i> Continue with Google
         </a>
+
+        <div class="mt-4 text-muted small">
+            By continuing, you agree to our Terms of Service.
+        </div>
         {% endif %}
     </div>
+
 </body>
+
 </html>

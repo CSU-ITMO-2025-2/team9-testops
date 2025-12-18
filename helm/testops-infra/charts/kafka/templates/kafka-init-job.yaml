@@ -58,7 +58,23 @@ spec:
               --topic test_run_queue \
               --partitions 3 \
               --replication-factor 1 \
-              --if-not-exists || echo "Topic might already exist, continuing..."
+              --if-not-exists || echo "Topic test_run_queue might already exist, continuing..."
+            
+            echo "Creating Kafka topic: notification_queue"
+            /opt/kafka/bin/kafka-topics.sh --create \
+              --bootstrap-server {{ .Values.global.kafka.name }}.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.global.kafka.service.port }} \
+              --topic notification_queue \
+              --partitions 3 \
+              --replication-factor 1 \
+              --if-not-exists || echo "Topic notification_queue might already exist, continuing..."
+
+            echo "Creating Kafka topic: dead_letter_queue"
+            /opt/kafka/bin/kafka-topics.sh --create \
+              --bootstrap-server {{ .Values.global.kafka.name }}.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.global.kafka.service.port }} \
+              --topic dead_letter_queue \
+              --partitions 3 \
+              --replication-factor 1 \
+              --if-not-exists || echo "Topic dead_letter_queue might already exist, continuing..."
             
             echo "Listing topics:"
             /opt/kafka/bin/kafka-topics.sh --list \

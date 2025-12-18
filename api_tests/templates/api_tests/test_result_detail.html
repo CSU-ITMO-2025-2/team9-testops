@@ -1,18 +1,51 @@
 {% extends 'api_tests/base.html' %}
 
-{% block title %}Test Result Detail{% endblock %}
+{% block title %}Result #{{ test_result.id }}{% endblock %}
+{% block page_title %}Test Result Details{% endblock %}
 
 {% block content %}
-<h1 class="mt-5">Test Result Detail</h1>
-<div class="card mt-3">
-    <div class="card-header">
-        <i class="fas fa-info-circle"></i> Test Result ID: {{ test_result.id }}
-    </div>
-    <div class="card-body">
-        <h5 class="card-title"><i class="fas fa-user"></i> Owner: {{ test_result.owner.username }}</h5>
-        <p class="card-text"><i class="fas fa-check-circle"></i> Status: {{ test_result.status }}</p>
-        <p class="card-text"><i class="fas fa-file-alt"></i> Log: {{ test_result.log }}</p>
-        <p class="card-text"><i class="fas fa-calendar-alt"></i> Created At: {{ test_result.created_at }}</p>
+<div class="row justify-content-center">
+    <div class="col-lg-8 animate__animated animate__fadeInUp">
+        <div class="card border-0 shadow-sm">
+            <div
+                class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                <h5 class="card-title fw-bold mb-0">
+                    <i class="bi bi-file-earmark-bar-graph text-primary me-2"></i> Result #{{ test_result.id }}
+                </h5>
+                <span class="badge bg-light text-secondary border">{{ test_result.created_at|date:"M d, Y H:i" }}</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="text-center mb-5">
+                    {% if test_result.status == 'passed' %}
+                    <div class="display-3 text-success mb-2"><i class="bi bi-check-circle-fill"></i></div>
+                    <h3 class="fw-bold text-success">Passed</h3>
+                    {% elif test_result.status == 'failed' %}
+                    <div class="display-3 text-danger mb-2"><i class="bi bi-x-circle-fill"></i></div>
+                    <h3 class="fw-bold text-danger">Failed</h3>
+                    {% else %}
+                    <div class="display-3 text-warning mb-2"><i class="bi bi-hourglass-split"></i></div>
+                    <h3 class="fw-bold text-warning">{{ test_result.status|title }}</h3>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <label class="small text-muted fw-bold text-uppercase">Execution Log</label>
+                    <div class="bg-dark text-light p-3 rounded font-monospace small overflow-auto"
+                        style="max-height: 400px;">
+                        {{ test_result.log|default:"No description or logs provided."|linebreaksbr }}
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                    <div class="text-muted small">
+                        Owner: <strong>{{ test_result.owner.username }}</strong>
+                    </div>
+                    <button class="btn btn-primary px-4" onclick="window.history.back()">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
