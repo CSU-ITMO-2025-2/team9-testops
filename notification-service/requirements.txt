@@ -1,3 +1,6 @@
 confluent-kafka
 prometheus-client
 requests
+fastapi
+uvicorn
+sse-starlette

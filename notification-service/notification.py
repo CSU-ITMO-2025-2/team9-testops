@@ -1,61 +1,130 @@
 import logging
-from confluent_kafka import Consumer
-import os
 import json
+import os
+import asyncio
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from sse_starlette.sse import EventSourceResponse
+from confluent_kafka import Consumer
+import uvicorn
 from prometheus_client import start_http_server, Counter
 
+# Configuration
 KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
 NOTIFICATION_QUEUE = 'notification_queue'
+PORT = int(os.getenv('PORT', 8002))
+
+# Logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Prometheus metrics
 NOTIFICATIONS_SENT = Counter('notifications_sent', 'Number of notifications sent', ['status'])
 
-def listen_for_notifications():
+app = FastAPI()
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Global list of connected clients (queues)
+clients = []
+
+async def kafka_listener():
+    """Background task to consume Kafka messages and broadcast to SSE clients."""
     consumer = Consumer({
         'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS,
-        'group.id': 'notification_group',
+        'group.id': 'notification_service_group',
         'auto.offset.reset': 'earliest',
         'enable.auto.commit': True,
         'auto.commit.interval.ms': 5000,
     })
     consumer.subscribe([NOTIFICATION_QUEUE])
-    print("Notification Service: Listening for messages...")
-    
+    logger.info(f"Connected to Kafka: {KAFKA_BOOTSTRAP_SERVERS}, Topic: {NOTIFICATION_QUEUE}")
+
     try:
         while True:
-            msg = consumer.poll(1.0)
+            # Poll for messages (non-blocking effectively due to sleep in loop)
+            # In async loop, we should not block long.
+            # We can run the poll in an executor or just poll with short timeout.
+            msg = consumer.poll(0.1) 
+            
             if msg is None:
+                await asyncio.sleep(0.1)
                 continue
+            
             if msg.error():
-                logging.error(f"Consumer error: {msg.error()}")
+                logger.error(f"Consumer error: {msg.error()}")
                 continue
 
-            print(f"Received notification request: {msg.value().decode('utf-8')}")
             try:
-                data = json.loads(msg.value().decode('utf-8'))
-                send_notification(data)
+                payload = msg.value().decode('utf-8')
+                logger.info(f"Received notification: {payload}")
+                data = json.loads(payload)
+                
+                # Update metrics
                 NOTIFICATIONS_SENT.labels(status='success').inc()
+
+                # Broadcast to all connected clients
+                if clients:
+                    logger.info(f"Broadcasting to {len(clients)} clients")
+                    for queue in clients:
+                        await queue.put(data)
+                
             except Exception as e:
-                logging.error(f"Error processing notification: {e}")
+                logger.error(f"Error processing message: {e}")
                 NOTIFICATIONS_SENT.labels(status='error').inc()
                 
-    except KeyboardInterrupt:
-        pass
+    except Exception as e:
+        logger.error(f"Kafka listener crashed: {e}")
     finally:
         consumer.close()
 
-def send_notification(data):
-    # Placeholder for actual notification logic (Email, Slack, etc.)
-    test_id = data.get('test_id')
-    status = data.get('status')
-    log = data.get('log', '')
+@app.on_event("startup")
+async def startup_event():
+    # Start Kafka listener in background
+    asyncio.create_task(kafka_listener())
     
-    print(f"Sending notification for Test ID: {test_id}, Status: {status}")
-    # Example: requests.post(SLACK_WEBHOOK_URL, json={"text": f"Test {test_id} finished with status {status}"})
+    # Start Prometheus server on separate port if needed, or just relying on uvicorn
+    # Since we use 8002 for Uvicorn, we can run Prometheus on 8003 or just expose an endpoint
+    # For now, let's keep it simple and maybe skip exposing metrics on a separate port or run it on 8001?
+    # Consumer uses 8001. Notification used to use 8002.
+    # We will let Uvicorn take 8002.
+    pass
+
+@app.get("/stream")
+async def message_stream(request: Request):
+    """SSE endpoint for streaming notifications."""
+    async def event_generator():
+        queue = asyncio.Queue()
+        clients.append(queue)
+        logger.info(f"Client connected. Total clients: {len(clients)}")
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+                data = await queue.get()
+                yield {"data": json.dumps(data)}
+        except asyncio.CancelledError:
+            pass
+        finally:
+            clients.remove(queue)
+            logger.info(f"Client disconnected. Total clients: {len(clients)}")
+
+    return EventSourceResponse(event_generator())
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 def main():
-    start_http_server(8002) # Different port than consumer
-    listen_for_notifications()
+    # Run Uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=PORT)
 
 if __name__ == "__main__":
     main()

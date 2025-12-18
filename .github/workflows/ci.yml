@@ -62,6 +62,8 @@ jobs:
             - 'manage.py'
           consumer:
             - 'test-execute-consumer/**'
+            - 'watch.py'
+            - 'requirements.txt'
           notification:
             - 'notification-service/**'
           helm_infra:

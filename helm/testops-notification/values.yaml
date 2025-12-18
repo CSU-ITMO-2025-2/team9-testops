@@ -28,3 +28,19 @@ autoscaling:
   minReplicas: 1
   maxReplicas: 3
   targetCPUUtilizationPercentage: 80
+  
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  hosts:
+    - host: team9.kubepractice.ru
+      paths:
+        - path: /notifications(/|$)(.*)
+          pathType: Prefix
+  tls:
+    - hosts:
+        - team9.kubepractice.ru
+      secretName: tls-secret
+  
