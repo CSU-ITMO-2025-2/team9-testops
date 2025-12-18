@@ -4,7 +4,7 @@ namespace: team9-ns
 
 image:
   repository: vanlahuynhduc/ai-testops-notification
-  tag: "1f27846"
+  tag: "630c1b3"
   pullPolicy: Always
 
 service:
