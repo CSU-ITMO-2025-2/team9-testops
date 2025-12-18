@@ -13,7 +13,7 @@ consumer:
   replicaCount: 1
   image:
     repository: vanlahuynhduc/ai-testops-consumer
-    tag: "630c1b3"
+    tag: "00e4bfc"
   service:
     type: ClusterIP
     port: 8080
