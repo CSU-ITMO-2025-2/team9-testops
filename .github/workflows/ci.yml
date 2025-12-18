@@ -5,6 +5,12 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild all images and charts'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: ci-cd-pipeline
@@ -77,55 +83,64 @@ jobs:
         echo "Checking for chart changes..."
         
         # Initialize flags
-        BUMP_INFRA=false
-        BUMP_PUBLISHER=false
-        BUMP_CONSUMER=false
-        BUMP_NOTIFICATION=false
-        BUMP_POSTDEPLOY=false
-        
-        # Bump publisher if Django code or Dockerfile changes
-        if [ "${{ steps.changes.outputs.django }}" == "true" ]; then
-          BUMP_PUBLISHER=true
-        fi
-        
-        # Bump consumer if consumer code changes
-        if [ "${{ steps.changes.outputs.consumer }}" == "true" ]; then
-          BUMP_CONSUMER=true
-        fi
-        
-        # Bump notification if notification code changes
-        if [ "${{ steps.changes.outputs.notification }}" == "true" ]; then
-          BUMP_NOTIFICATION=true
-        fi
-        
-        # Bump specific charts if their helm templates change
-        if [ "${{ steps.changes.outputs.helm_infra }}" == "true" ]; then
-          BUMP_INFRA=true
-        fi
-        
-        if [ "${{ steps.changes.outputs.helm_publisher }}" == "true" ]; then
-          BUMP_PUBLISHER=true
-        fi
-        
-        if [ "${{ steps.changes.outputs.helm_consumer }}" == "true" ]; then
-          BUMP_CONSUMER=true
-        fi
-        
-        if [ "${{ steps.changes.outputs.helm_notification }}" == "true" ]; then
-          BUMP_NOTIFICATION=true
-        fi
-        
-        if [ "${{ steps.changes.outputs.helm_postdeploy }}" == "true" ]; then
-          BUMP_POSTDEPLOY=true
-        fi
-        
-        # Bump all charts if argocd configs change (affects all deployments)
-        if [ "${{ steps.changes.outputs.argocd }}" == "true" ]; then
+        if [ "${{ github.event.inputs.force_rebuild }}" == "true" ]; then
+          echo "Force rebuild enabled - bumping all components"
           BUMP_INFRA=true
           BUMP_PUBLISHER=true
           BUMP_CONSUMER=true
           BUMP_NOTIFICATION=true
           BUMP_POSTDEPLOY=true
+        else
+          BUMP_INFRA=false
+          BUMP_PUBLISHER=false
+          BUMP_CONSUMER=false
+          BUMP_NOTIFICATION=false
+          BUMP_POSTDEPLOY=false
+          
+          # Bump publisher if Django code or Dockerfile changes
+          if [ "${{ steps.changes.outputs.django }}" == "true" ]; then
+            BUMP_PUBLISHER=true
+          fi
+          
+          # Bump consumer if consumer code changes
+          if [ "${{ steps.changes.outputs.consumer }}" == "true" ]; then
+            BUMP_CONSUMER=true
+          fi
+          
+          # Bump notification if notification code changes
+          if [ "${{ steps.changes.outputs.notification }}" == "true" ]; then
+            BUMP_NOTIFICATION=true
+          fi
+          
+          # Bump specific charts if their helm templates change
+          if [ "${{ steps.changes.outputs.helm_infra }}" == "true" ]; then
+            BUMP_INFRA=true
+          fi
+          
+          if [ "${{ steps.changes.outputs.helm_publisher }}" == "true" ]; then
+            BUMP_PUBLISHER=true
+          fi
+          
+          if [ "${{ steps.changes.outputs.helm_consumer }}" == "true" ]; then
+            BUMP_CONSUMER=true
+          fi
+          
+          if [ "${{ steps.changes.outputs.helm_notification }}" == "true" ]; then
+            BUMP_NOTIFICATION=true
+          fi
+          
+          if [ "${{ steps.changes.outputs.helm_postdeploy }}" == "true" ]; then
+            BUMP_POSTDEPLOY=true
+          fi
+          
+          # Bump all charts if argocd configs change (affects all deployments)
+          if [ "${{ steps.changes.outputs.argocd }}" == "true" ]; then
+            BUMP_INFRA=true
+            BUMP_PUBLISHER=true
+            BUMP_CONSUMER=true
+            BUMP_NOTIFICATION=true
+            BUMP_POSTDEPLOY=true
+          fi
         fi
         
         # Bump testops-infra
@@ -202,7 +217,7 @@ jobs:
         fi
     
     - name: Build and push Django app image
-      if: steps.changes.outputs.django == 'true'
+      if: steps.changes.outputs.django == 'true' || github.event.inputs.force_rebuild == 'true'
       uses: docker/build-push-action@v4
       with:
         context: .
@@ -215,7 +230,7 @@ jobs:
         platforms: linux/amd64,linux/arm64
     
     - name: Build and push Consumer image
-      if: steps.changes.outputs.consumer == 'true'
+      if: steps.changes.outputs.consumer == 'true' || github.event.inputs.force_rebuild == 'true'
       uses: docker/build-push-action@v4
       with:
         context: .
@@ -228,7 +243,7 @@ jobs:
         platforms: linux/amd64,linux/arm64
         
     - name: Build and push Notification service image
-      if: steps.changes.outputs.notification == 'true'
+      if: steps.changes.outputs.notification == 'true' || github.event.inputs.force_rebuild == 'true'
       uses: docker/build-push-action@v4
       with:
         context: ./notification-service
@@ -242,17 +257,17 @@ jobs:
     
     - name: Update image tags in values.yaml
       run: |
-        if [ "${{ steps.changes.outputs.django }}" == "true" ]; then
+        if [ "${{ steps.changes.outputs.django }}" == "true" ] || [ "${{ github.event.inputs.force_rebuild }}" == "true" ]; then
           echo "Updating Django app image tag to ${{ steps.version.outputs.VERSION }}"
           sed -i "/djangoApp:/,/service:/ s|tag:.*|tag: \"${{ steps.version.outputs.VERSION }}\"|" helm/testops-publisher/values.yaml
         fi
         
-        if [ "${{ steps.changes.outputs.consumer }}" == "true" ]; then
+        if [ "${{ steps.changes.outputs.consumer }}" == "true" ] || [ "${{ github.event.inputs.force_rebuild }}" == "true" ]; then
           echo "Updating Consumer image tag to ${{ steps.version.outputs.VERSION }}"
           sed -i "/consumer:/,/service:/ s|tag:.*|tag: \"${{ steps.version.outputs.VERSION }}\"|" helm/testops-consumer/values.yaml
         fi
         
-        if [ "${{ steps.changes.outputs.notification }}" == "true" ]; then
+        if [ "${{ steps.changes.outputs.notification }}" == "true" ] || [ "${{ github.event.inputs.force_rebuild }}" == "true" ]; then
           echo "Updating Notification service image tag to ${{ steps.version.outputs.VERSION }}"
           sed -i "/image:/,/service:/ s|tag:.*|tag: \"${{ steps.version.outputs.VERSION }}\"|" helm/testops-notification/values.yaml
         fi
@@ -263,7 +278,7 @@ jobs:
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
         
     - name: Commit and push changes
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true') && github.ref == 'refs/heads/main'
+      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && github.ref == 'refs/heads/main'
       run: |
         git add helm/*/values.yaml helm/*/Chart.yaml helm/*/Chart.lock
         if git diff --staged --quiet; then
@@ -275,7 +290,7 @@ jobs:
         git push origin main
     
     - name: Create and push Git tags
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true') && github.ref == 'refs/heads/main'
+      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && github.ref == 'refs/heads/main'
       run: |
         # Main release tag
         RELEASE_TAG="testops-${{ steps.version.outputs.VERSION }}"
@@ -327,13 +342,13 @@ jobs:
         fi
     
     - name: Install Helm
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm == 'true' || steps.changes.outputs.argocd == 'true') && github.ref == 'refs/heads/main'
+      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && github.ref == 'refs/heads/main'
       uses: azure/setup-helm@v3
       with:
         version: v3.13.0
     
     - name: Update Helm dependencies
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true') && github.ref == 'refs/heads/main'
+      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && github.ref == 'refs/heads/main'
       run: |
         echo "Updating Helm dependencies for charts with dependencies..."
         
@@ -351,7 +366,7 @@ jobs:
         fi
     
     - name: Run chart-releaser to update index.yaml
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true') && github.ref == 'refs/heads/main'
+      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && github.ref == 'refs/heads/main'
       uses: helm/chart-releaser-action@v1.6.0
       with:
         charts_dir: helm
@@ -360,7 +375,7 @@ jobs:
         CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
     
     - name: Verify chart-releaser output
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true') && github.ref == 'refs/heads/main'
+      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && github.ref == 'refs/heads/main'
       run: |
         echo "Checking chart-releaser output directory..."
         ls -la .cr-release-packages/ 2>/dev/null || echo "No .cr-release-packages directory"
@@ -369,7 +384,7 @@ jobs:
         git show origin/gh-pages:index.yaml | head -20 || echo "index.yaml not found on gh-pages"
     
     - name: Update index.html on gh-pages to trigger ArgoCD
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true') && github.ref == 'refs/heads/main'
+      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && github.ref == 'refs/heads/main'
       run: |
         # Stash any local changes before switching branches
         git stash
@@ -487,7 +502,7 @@ jobs:
         git checkout main
     
     - name: Create GitHub Release
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true') && github.ref == 'refs/heads/main'
+      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && github.ref == 'refs/heads/main'
       uses: softprops/action-gh-release@v1
       with:
         tag_name: testops-${{ steps.version.outputs.VERSION }}
