@@ -33,6 +33,8 @@ spec:
           value: "kafka.{{ .Values.global.namespace }}.svc.cluster.local:9092"
         - name: DYNAMIC_CONFIG_ENABLED
           value: "true"
+        - name: SERVER_SERVLET_CONTEXT_PATH
+          value: "/kafka-ui"
         resources:
           requests:
             memory: "256Mi"
@@ -59,4 +61,32 @@ spec:
     name: http
   selector:
     app: kafka-ui
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kafka-ui
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: kafka-ui
+    {{- include "ai-testops.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  ingressClassName: "nginx"
+  rules:
+  - host: team9.kubepractice.ru
+    http:
+      paths:
+      - path: /kafka-ui
+        pathType: Prefix
+        backend:
+          service:
+            name: kafka-ui
+            port:
+              number: 8080
+  tls:
+  - hosts:
+    - team9.kubepractice.ru
+    secretName: tls-secret
 {{- end }}
