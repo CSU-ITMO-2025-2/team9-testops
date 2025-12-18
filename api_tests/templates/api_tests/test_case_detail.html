@@ -1,41 +1,104 @@
 {% extends 'api_tests/base.html' %}
 
-{% block title %}Test Case Detail{% endblock %}
+{% block title %}Test Case #{{ test_case.id }}{% endblock %}
+{% block page_title %}Test Case Details{% endblock %}
 
 {% block content %}
-<div class="pl-3">
-    <h1 class="mt-5">Test Case Detail</h1>
-    <div class="card mt-3">
-        <div class="card-header">
-            <i class="fas fa-info-circle"></i> Test Case ID: {{ test_case.id }}
-        </div>
-        <div class="card-body">
-            <h5 class="card-title"><i class="fas fa-link"></i> URL: {{ test_case.url }}</h5>
-            <p class="card-text"><i class="fas fa-code"></i> Method: {{ test_case.method }}</p>
-            <p class="card-text"><i class="fas fa-file-alt"></i> Body: {{ test_case.body }}</p>
-            <p class="card-text"><i class="fas fa-list"></i> Parameters: {{ test_case.parameters }}</p>
-            <p class="card-text"><i class="fas fa-file-code"></i> Content: {{ test_case.content }}</p>
-            <p class="card-text"><i class="fas fa-check-circle"></i> Result: {{ test_case.result }}</p>
-            <p class="card-text"><i class="fas fa-exclamation-triangle"></i> Error Details: {{ test_case.error_details }}</p>
-            <p class="card-text"><i class="fas fa-exchange-alt"></i> Request/Response: {{ test_case.request_response }}</p>
-            <p class="card-text"><i class="fas fa-calendar-alt"></i> Created At: {{ test_case.created_at }}</p>
-            <p class="card-text"><i class="fas fa-calendar-alt"></i> Updated At: {{ test_case.updated_at }}</p>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'list_test_executions' %}">Executions</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'test_execution_detail' test_case.test_execution.id %}">Execution
+                #{{ test_case.test_execution.id }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Case #{{ test_case.id }}</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-lg-8 animate__animated animate__fadeInLeft">
+        <div class="card border-0 shadow-sm mb-4">
+            <div
+                class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                <h5 class="card-title fw-bold mb-0">
+                    <i class="bi bi-file-earmark-code text-primary me-2"></i> Specification
+                </h5>
+                <span
+                    class="badge {% if test_case.method == 'GET' %}bg-primary{% elif test_case.method == 'POST' %}bg-success{% elif test_case.method == 'DELETE' %}bg-danger{% else %}bg-secondary{% endif %} fs-6">
+                    {{ test_case.method }}
+                </span>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <label class="small text-muted fw-bold">Endpoint URL</label>
+                    <div class="p-2 bg-light rounded text-break font-monospace">{{ test_case.url }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="small text-muted fw-bold">Request Body</label>
+                        <pre class="bg-dark text-light p-3 rounded small"
+                            style="max-height: 200px;">{{ test_case.body|default:"{}" }}</pre>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="small text-muted fw-bold">Parameters</label>
+                        <pre class="bg-dark text-light p-3 rounded small"
+                            style="max-height: 200px;">{{ test_case.parameters|default:"[]" }}</pre>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="small text-muted fw-bold">Generated Test Content</label>
+                    <div class="code-editor rounded border" style="height: 300px;"
+                        data-content="{{ test_case.content|escapejs }}"></div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <h2 class="mt-5">Test Result</h2>
-    <div class="card mt-3">
-        <div class="card-header">
-            Test Result
+    <div class="col-lg-4 animate__animated animate__fadeInRight">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                <h5 class="card-title fw-bold mb-0">
+                    <i class="bi bi-activity text-warning me-2"></i> Execution Result
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                {% if test_result %}
+                <div class="text-center mb-4">
+                    {% if test_result.status == 'passed' %}
+                    <div class="display-1 text-success"><i class="bi bi-check-circle"></i></div>
+                    <h4 class="text-success fw-bold">Passed</h4>
+                    {% elif test_result.status == 'failed' %}
+                    <div class="display-1 text-danger"><i class="bi bi-x-circle"></i></div>
+                    <h4 class="text-danger fw-bold">Failed</h4>
+                    {% else %}
+                    <div class="display-1 text-warning"><i class="bi bi-hourglass-split"></i></div>
+                    <h4 class="text-warning fw-bold">{{ test_result.status|title }}</h4>
+                    {% endif %}
+                    <small class="text-muted">Executed on {{ test_result.created_at|date:"M d, Y H:i:s" }}</small>
+                </div>
+
+                <label class="small text-muted fw-bold">Execution Log</label>
+                <div class="bg-light p-3 rounded small text-secondary font-monospace overflow-auto"
+                    style="max-height: 300px;">
+                    {{ test_result.log|linebreaksbr }}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox fs-1 text-muted opacity-50"></i>
+                    <p class="mt-3 text-muted">No execution result yet.</p>
+                </div>
+                {% endif %}
+            </div>
         </div>
-        <div class="card-body">
-            {% if test_result %}
-            <p class="card-text"><strong>Status:</strong> {{ test_result.status }}</p>
-            <p class="card-text"><strong>Log:</strong> {{ test_result.log }}</p>
-            <p class="card-text"><strong>Created At:</strong> {{ test_result.created_at }}</p>
-            {% else %}
-            <p class="card-text">No test result available.</p>
-            {% endif %}
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" onclick="window.history.back()">
+                        <i class="bi bi-arrow-left me-2"></i> Go Back
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

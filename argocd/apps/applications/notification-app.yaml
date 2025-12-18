@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: team9-notification
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  project: team9
+  
+  source:
+    repoURL: https://csu-itmo-2025-2.github.io/team9-testops
+    chart: team9-notification
+    targetRevision: "0.*.*"
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: team9-ns
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - SyncTimeout=1200
+      - SkipDryRunOnMissingResource=true
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 20m
+  
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas

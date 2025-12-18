@@ -1,0 +1,46 @@
+# Default values for team9-notification
+
+namespace: team9-ns
+
+image:
+  repository: vanlahuynhduc/ai-testops-notification
+  tag: "630c1b3"
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8002
+  metricsPort: 8002
+
+env:
+  KAFKA_BOOTSTRAP_SERVERS: "kafka.team9-ns.svc.cluster.local:9092"
+
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "50m"
+  limits:
+    memory: "128Mi"
+    cpu: "100m"
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  hosts:
+    - host: team9.kubepractice.ru
+      paths:
+        - path: /notifications(/|$)(.*)
+          pathType: Prefix
+  tls:
+    - hosts:
+        - team9.kubepractice.ru
+      secretName: tls-secret
+  

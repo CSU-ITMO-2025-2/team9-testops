@@ -9,6 +9,7 @@ from prometheus_client import start_http_server, Counter
 KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
 PUBLISHER_URL = os.getenv('PUBLISHER_URL', 'http://localhost:8000')
 DEAD_LETTER_QUEUE = 'dead_letter_queue'
+NOTIFICATION_QUEUE = 'notification_queue'
 
 # Prometheus metrics
 TEST_CASES_STATUS = Counter('test_cases_status', 'Status of test cases', ['test_case_id', 'status'])
@@ -20,7 +21,6 @@ def listen_for_kafka_messages():
         'auto.offset.reset': 'earliest',
         'enable.auto.commit': True,  # Enable auto-commit
         'auto.commit.interval.ms': 5000,  # Commit every 5 seconds
-        'max.poll.records': 50,  # Fetch up to 50 messages per poll (3 partitions * ~16-17 per partition)
         'session.timeout.ms': 30000,  # 30s session timeout
         'heartbeat.interval.ms': 10000,  # Send heartbeat every 10s (1/3 of session timeout)
     })
@@ -45,6 +45,16 @@ def listen_for_kafka_messages():
                 result = run_test_case(test_case_id, test_file_content)
                 save_test_result_to_db(test_case_id, result['status'], result['log'])
                 TEST_CASES_STATUS.labels(test_case_id=test_case_id, status=result['status']).inc()
+                
+                # Send notification
+                notification_data = {
+                    'test_id': test_case_id,
+                    'status': result['status'],
+                    'log': result['log']
+                }
+                producer.produce(NOTIFICATION_QUEUE, json.dumps(notification_data).encode('utf-8'))
+                producer.poll(0)
+
                 # Offset is automatically committed by enable.auto.commit
                 print(f"Successfully processed test case {test_case_id}")
             except (json.JSONDecodeError, KeyError) as e:

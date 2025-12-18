@@ -1,17 +1,18 @@
 let codeEditors = {};
 let autosaveTimeouts = {};
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     initializeCodeEditors();
+    initializeSSE();
 });
 
 // Initialize the testCases variable with the test cases data
 let testCases = JSON.parse(document.getElementById('test-cases-data').textContent);
 
 function initializeCodeEditors() {
-    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs' }});
-    require(['vs/editor/editor.main'], function() {
-        document.querySelectorAll('.code-editor').forEach(function(textarea) {
+    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs' } });
+    require(['vs/editor/editor.main'], function () {
+        document.querySelectorAll('.code-editor').forEach(function (textarea) {
             if (!codeEditors[textarea.id]) {
                 const editorContainer = document.createElement('div');
                 editorContainer.style.height = '300px';
@@ -33,7 +34,7 @@ function initializeCodeEditors() {
                 codeEditors[textarea.id] = editor;
 
                 // Add blur event for autosave functionality
-                editor.onDidBlurEditorText(function() {
+                editor.onDidBlurEditorText(function () {
                     const testCaseId = textarea.id.split('-')[1];
                     autosaveTestCaseContent(testCaseId, editor.getValue());
                     showToast(`Test case ${testCaseId} content autosaved`, 'info');
@@ -50,10 +51,10 @@ function autosaveTestCaseContent(test_case_id, content) {
         type: "POST",
         data: JSON.stringify({ content: content }),
         contentType: "application/json",
-        success: function(data) {
+        success: function (data) {
             console.log("Autosave successful for test case " + test_case_id);
         },
-        error: function(xhr) {
+        error: function (xhr) {
             console.error("Autosave failed for test case " + test_case_id);
         }
     });
@@ -69,14 +70,15 @@ function generateTestCaseContent(test_case_id) {
     return $.ajax({
         url: "/api_test/api/generate_test_case_content/" + test_case_id + '?additional_prompt=' + encodeURIComponent(additionalPrompt),
         type: "GET",
-        success: function(data) {
+        success: function (data) {
             $('#loading').hide();
             const editor = codeEditors['content-' + test_case_id];
             editor.setValue(data.content);
             addLogMessage(`Generated test case ${test_case_id}`, 'success');
+            showToast(`Test case ${test_case_id} generated successfully`, 'success');
             // toggleDetails(test_case_id); // Auto expand test case details
         },
-        error: function(xhr) {
+        error: function (xhr) {
             $('#loading').hide();
             const errorMessage = xhr.responseJSON ? xhr.responseJSON.error : 'An error occurred';
             $('#error-message').text(errorMessage).show();
@@ -92,7 +94,7 @@ function executeTestCase(test_case_id) {
     return $.ajax({
         url: "/api_test/api/execute_test_case/" + test_case_id,
         type: "GET",
-        success: function(data) {
+        success: function (data) {
             $('#loading').hide();
             if (data.error_details) {
                 $('#test-result-' + test_case_id).append('<pre class="text-warning">' + data.error_details + '</pre>');
@@ -103,10 +105,9 @@ function executeTestCase(test_case_id) {
             if (data.log) {
                 $('#test-result-' + test_case_id).append('<pre class="text-info">' + data.log + '</pre>');
             }
-            checkTestCaseStatus(test_case_id);
             addLogMessage(`Executed test case ${test_case_id}`, 'success');
         },
-        error: function(xhr) {
+        error: function (xhr) {
             $('#loading').hide();
             const errorMessage = xhr.responseText ? xhr.responseText : 'An error occurred';
             $('#test-result-' + test_case_id).html('<pre>' + errorMessage + '</pre>');
@@ -117,34 +118,48 @@ function executeTestCase(test_case_id) {
     });
 }
 
-function checkTestCaseStatus(test_case_id) {
-    const intervalId = setInterval(function() {
-        console.log('Checking test case status...');
-        $.ajax({
-            url: "/api_test/api/test_case/" + test_case_id,
-            type: "GET",
-            success: function(data) {
-                console.log(data);
-                if (data.test_case && data.test_case.test_result && (data.test_case.test_result.status === 'passed' || data.test_case.test_result.status === 'failed')) {
-                    clearInterval(intervalId);
-                    updateTestResult(test_case_id, data.test_case.test_result);
-                    $('#execute-button-' + test_case_id).html('<i class="fas fa-check"></i> Executed').addClass('btn-success').removeClass('btn-primary');
-                    $('#execute-button-' + test_case_id).prop('disabled', false);
-                    if (data.test_case.test_result.status === 'failed') {
-                        showToast(`Test case ${data.test_case.url} - id: ${test_case_id} failed`, 'warning');
-                    } else {
-                        showToast(`Test case ${data.test_case.url} - id: ${test_case_id} executed successfully`, 'success');
-                    }
-                    updateTestSummary();
-                    reloadTestResult(test_case_id);
-                    // toggleDetails(test_case_id);
+// Initialize SSE connection to Notification Service
+function initializeSSE() {
+    console.log("Initializing SSE connection...");
+    // Connect to Notification Service via Ingress
+    const eventSource = new EventSource("/notifications/stream");
+
+    eventSource.onopen = function () {
+        console.log("SSE connection opened.");
+    };
+
+    eventSource.onmessage = function (event) {
+        try {
+            const data = JSON.parse(event.data);
+            console.log("Received notification:", data);
+
+            const testCaseId = data.test_id;
+            // Check if this test case is on the current page
+            if (document.getElementById('test-case-' + testCaseId)) {
+                // Fetch latest result from DB to ensure consistency (or use data payload directly if efficient)
+                // Using reloadTestResult ensures we get the formatted log and consisten DB state
+                reloadTestResult(testCaseId);
+
+                const execBtn = $('#execute-button-' + testCaseId);
+                execBtn.html('<i class="fas fa-check"></i> Executed').addClass('btn-success').removeClass('btn-primary');
+                execBtn.prop('disabled', false);
+
+                if (data.status === 'failed') {
+                    showToast(`Test case ${testCaseId} failed`, 'warning');
+                } else {
+                    showToast(`Test case ${testCaseId} executed successfully`, 'success');
                 }
-            },
-            error: function(xhr) {
-                console.error(xhr.responseText);
+                updateTestSummary();
             }
-        });
-    }, 2000);
+        } catch (e) {
+            console.error("Error processing SSE message:", e);
+        }
+    };
+
+    eventSource.onerror = function (err) {
+        console.error("EventSource failed:", err);
+        // EventSource automatically attempts to reconnect
+    };
 }
 
 function updateTestSummary() {
@@ -154,7 +169,7 @@ function updateTestSummary() {
         url: "/api_test/api/update_test_summary/",
         type: "GET",
         data: { test_execution_id: testExecutionId },
-        success: function(data) {
+        success: function (data) {
             $('#loading').hide();
             // Update the test summary UI with the new data
             $('#passed-count').text(data.passed_count);
@@ -162,7 +177,7 @@ function updateTestSummary() {
             $('#pending-count').text(data.pending_count);
             $('#unprocessed-count').text(data.unprocessed_count);
         },
-        error: function(xhr) {
+        error: function (xhr) {
             $('#loading').hide();
             console.error("Failed to update test summary:", xhr.responseText);
         }
@@ -176,7 +191,7 @@ function updateTestResult(test_case_id, test_result) {
     testResultDiv.html('<pre>' + shortLog + '</pre>');
     if (logContent.length > 200) {
         const expandButton = $('<button class="btn btn-link btn-sm">Show More</button>');
-        expandButton.on('click', function() {
+        expandButton.on('click', function () {
             testResultDiv.html('<pre>' + logContent + '</pre>');
             $(this).remove();
         });
@@ -195,14 +210,14 @@ function viewTestResult(test_case_id) {
     $.ajax({
         url: "/api_test/api/test_case/" + test_case_id,
         type: "GET",
-        success: function(data) {
+        success: function (data) {
             if (data.test_case.test_result) {
                 $('#testResultModalBody').html('<pre>' + data.test_case.test_result.log + '</pre>');
             } else {
                 $('#testResultModalBody').html('<pre>No test result available.</pre>');
             }
         },
-        error: function(xhr) {
+        error: function (xhr) {
             const errorMessage = xhr.responseText ? xhr.responseText : 'An error occurred';
             $('#testResultModalBody').html('<pre>' + errorMessage + '</pre>');
         }
@@ -214,7 +229,7 @@ function reloadTestResult(test_case_id) {
     $.ajax({
         url: "/api_test/api/test_case/" + test_case_id,
         type: "GET",
-        success: function(data) {
+        success: function (data) {
             $('#loading').hide();
             if (data.test_case.test_result) {
                 updateTestResult(test_case_id, data.test_case.test_result);
@@ -224,7 +239,7 @@ function reloadTestResult(test_case_id) {
                 showToast(`No test result available for test case ${test_case_id}`, 'info');
             }
         },
-        error: function(xhr) {
+        error: function (xhr) {
             $('#loading').hide();
             const errorMessage = xhr.responseText ? xhr.responseText : 'An error occurred';
             showToast(`Failed to reload test result for test case ${test_case_id}: ${errorMessage}`, 'danger');
@@ -233,7 +248,7 @@ function reloadTestResult(test_case_id) {
 }
 
 function updateTestCaseCardColor(test_case_id, status) {
-    const card = document.getElementById('test-case-' + test_case_id+'-card');
+    const card = document.getElementById('test-case-' + test_case_id + '-card');
     card.classList.remove('border-light', 'border-success', 'bg-light-success', 'border-danger', 'bg-light-danger', 'border-warning', 'bg-light-warning');
     if (status === 'passed') {
         card.classList.add('border-success', 'bg-light-success');
@@ -294,7 +309,7 @@ function addLogMessage(message, type = 'info') {
     }, 10);
 }
 
-document.getElementById('generate-all-tests').addEventListener('click', async function() {
+document.getElementById('generate-all-tests').addEventListener('click', async function () {
     resetProgressBar();
     const totalTestCases = testCases.length;
     let completedTestCases = 0;
@@ -314,7 +329,7 @@ document.getElementById('generate-all-tests').addEventListener('click', async fu
     showToast('All test cases generated successfully', 'success');
 });
 
-document.getElementById('generate-missing-tests').addEventListener('click', async function() {
+document.getElementById('generate-missing-tests').addEventListener('click', async function () {
     resetProgressBar();
     const totalTestCases = testCases.length;
     let completedTestCases = 0;
@@ -344,7 +359,7 @@ document.getElementById('generate-missing-tests').addEventListener('click', asyn
     }
 });
 
-document.getElementById('run-all-tests').addEventListener('click', async function() {
+document.getElementById('run-all-tests').addEventListener('click', async function () {
     resetProgressBar();
     const totalTestCases = testCases.length;
     let completedTestCases = 0;
@@ -375,7 +390,7 @@ function reloadTestCaseSummary() {
         url: "/api_test/api/update_test_summary/",
         type: "GET",
         data: { test_execution_id: testExecutionId },
-        success: function(data) {
+        success: function (data) {
             $('#loading').hide();
             // Update the test summary UI with the new data
             $('#passed-count').text(data.passed_count);
@@ -384,7 +399,7 @@ function reloadTestCaseSummary() {
             $('#unprocessed-count').text(data.unprocessed_count);
             showToast('Test case summary reloaded successfully', 'success');
         },
-        error: function(xhr) {
+        error: function (xhr) {
             $('#loading').hide();
             const errorMessage = xhr.responseText ? xhr.responseText : 'An error occurred';
             showToast(`Failed to reload test case summary: ${errorMessage}`, 'danger');
@@ -408,16 +423,16 @@ function updateBaseUrl() {
             test_execution_id: testExecutionId
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Base URL updated successfully');
-        } else {
-            alert('Failed to update Base URL: ' + data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while updating the Base URL');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Base URL updated successfully');
+            } else {
+                alert('Failed to update Base URL: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the Base URL');
+        });
 }
