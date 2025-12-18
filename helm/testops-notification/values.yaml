@@ -13,7 +13,7 @@ service:
   metricsPort: 8002
 
 env:
-  KAFKA_BOOTSTRAP_SERVERS: "kafka.testops.svc.cluster.local:9092"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka.team9-ns.svc.cluster.local:9092"
 
 resources:
   requests:
