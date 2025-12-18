@@ -75,6 +75,7 @@ function generateTestCaseContent(test_case_id) {
             const editor = codeEditors['content-' + test_case_id];
             editor.setValue(data.content);
             addLogMessage(`Generated test case ${test_case_id}`, 'success');
+            showToast(`Test case ${test_case_id} generated successfully`, 'success');
             // toggleDetails(test_case_id); // Auto expand test case details
         },
         error: function (xhr) {
