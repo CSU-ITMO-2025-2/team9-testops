@@ -21,7 +21,6 @@ def listen_for_kafka_messages():
         'auto.offset.reset': 'earliest',
         'enable.auto.commit': True,  # Enable auto-commit
         'auto.commit.interval.ms': 5000,  # Commit every 5 seconds
-        'max.poll.records': 50,  # Fetch up to 50 messages per poll (3 partitions * ~16-17 per partition)
         'session.timeout.ms': 30000,  # 30s session timeout
         'heartbeat.interval.ms': 10000,  # Send heartbeat every 10s (1/3 of session timeout)
     })
