@@ -2,6 +2,19 @@ apiVersion: v1
 entries:
   team9-consumer:
   - apiVersion: v2
+    appVersion: 5deccd5
+    created: "2025-12-18T08:05:14.836711554Z"
+    description: Consumer service for TestOps platform
+    digest: 08e75dc77e0f108c8e5308489a6356fc7b13255938803e157ffa3d166bfbfaea
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-consumer
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-consumer-1.1.21/team9-consumer-1.1.21.tgz
+    version: 1.1.21
+  - apiVersion: v2
     appVersion: 2a4ddfd
     created: "2025-12-15T14:06:32.623600035Z"
     description: Consumer service for TestOps platform
@@ -145,6 +158,36 @@ entries:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-consumer-1.1.10/team9-consumer-1.1.10.tgz
     version: 1.1.10
   team9-infra:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-12-18T08:05:15.09203235Z"
+    dependencies:
+    - condition: postgres.enabled
+      name: postgres
+      repository: ""
+      version: 1.0.0
+    - condition: kafka.enabled
+      name: kafka
+      repository: ""
+      version: 1.0.0
+    - name: shared
+      repository: ""
+      version: 1.0.0
+    - condition: prometheus.enabled
+      name: prometheus
+      repository: ""
+      version: 1.0.0
+    description: Infrastructure components for TestOps platform (PostgreSQL, Kafka,
+      shared resources)
+    digest: 72508d0300fe19aa8e224b31236c8e622f7602b708bca32887f1ae871d534917
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-infra
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-infra-1.2.54/team9-infra-1.2.54.tgz
+    version: 1.2.54
   - apiVersion: v2
     appVersion: 1.0.0
     created: "2025-12-17T18:53:06.300289021Z"
@@ -1135,7 +1178,34 @@ entries:
     urls:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-infra-1.2.21/team9-infra-1.2.21.tgz
     version: 1.2.21
+  team9-notification:
+  - apiVersion: v2
+    appVersion: 5deccd5
+    created: "2025-12-18T08:05:15.506571733Z"
+    description: Notification service for TestOps platform
+    digest: 74eb483275ca8aec9ba98cb73642d3cf122412c2a12ad8d80f8deed28f8eb50e
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-notification
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-notification-0.1.1/team9-notification-0.1.1.tgz
+    version: 0.1.1
   team9-postdeploy:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-12-18T08:05:15.770365956Z"
+    description: Post-deployment resources for TestOps (NetworkPolicies, Monitoring)
+    digest: 08de183c95bdfd0d5faf623e42e0f3e7056d2f58e6810206aa606df3897014a2
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-postdeploy
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-postdeploy-1.1.24/team9-postdeploy-1.1.24.tgz
+    version: 1.1.24
   - apiVersion: v2
     appVersion: 1.0.0
     created: "2025-12-15T14:07:29.259769832Z"
@@ -1267,6 +1337,30 @@ entries:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-postdeploy-1.1.14/team9-postdeploy-1.1.14.tgz
     version: 1.1.14
   team9-publisher:
+  - annotations:
+      keda.sh/installation: |
+        Install KEDA before deploying this chart:
+        kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.12.0/keda-2.12.0.yaml
+      keda.sh/required: "true"
+    apiVersion: v2
+    appVersion: 5deccd5
+    created: "2025-12-18T08:05:16.196090433Z"
+    description: Publisher service for TestOps platform
+    digest: 72deab9825b0b6be80db2b62edd90d6942e3c82ef4e5f5139b91d002dad53a63
+    keywords:
+    - ai
+    - testing
+    - kafka
+    - microservices
+    - keda
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-publisher
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-publisher-1.4.44/team9-publisher-1.4.44.tgz
+    version: 1.4.44
   - annotations:
       keda.sh/installation: |
         Install KEDA before deploying this chart:
@@ -2143,4 +2237,4 @@ entries:
     urls:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/testops-publisher-1.4.10/testops-publisher-1.4.10.tgz
     version: 1.4.10
-generated: "2025-12-17T18:53:06.48544049Z"
+generated: "2025-12-18T08:05:16.196659719Z"
