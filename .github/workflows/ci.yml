@@ -263,7 +263,7 @@ jobs:
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
         
     - name: Commit and push changes
-      if: steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true'
+      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true') && github.ref == 'refs/heads/main'
       run: |
         git add helm/*/values.yaml helm/*/Chart.yaml helm/*/Chart.lock
         if git diff --staged --quiet; then
