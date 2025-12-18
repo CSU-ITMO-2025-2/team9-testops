@@ -431,8 +431,78 @@
         <div class="loading-text animate__animated animate__pulse animate__infinite">Processing Request...</div>
     </div>
 
+    <!-- Global Toast Container -->
+    <div aria-live="polite" aria-atomic="true" class="position-relative">
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
+    </div>
+
     {% block extra_scripts %}
     <script>
+        // Global SSE Notification
+        document.addEventListener("DOMContentLoaded", function () {
+            if (typeof EventSource !== "undefined") {
+                console.log("Initializing Global SSE connection...");
+                const eventSource = new EventSource("/notifications/stream");
+
+                eventSource.onmessage = function (event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        console.log("Global Notification Received:", data);
+
+                        let message = `Test Case ${data.test_id} finished`;
+                        let type = 'info';
+
+                        if (data.status === 'passed') {
+                            message = `✅ Test Case ${data.test_id} Passed`;
+                            type = 'success';
+                        } else if (data.status === 'failed') {
+                            message = `❌ Test Case ${data.test_id} Failed`;
+                            type = 'danger';
+                        } else if (data.status === 'error') {
+                            message = `⚠️ Test Case ${data.test_id} Error`;
+                            type = 'warning';
+                        }
+
+                        showGlobalToast(message, type);
+
+                        // If on executing detail page, let the specific handler update the UI
+                        // This global handler just shows the notification
+                    } catch (e) {
+                        console.error("Error processing global SSE message:", e);
+                    }
+                };
+
+                eventSource.onerror = function (err) {
+                    // console.error("Global SSE failed:", err);
+                    // Silent reconnect
+                };
+            }
+        });
+
+        function showGlobalToast(message, type = 'success') {
+            const toastContainer = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-bg-${type} border-0 animate__animated animate__fadeInRight`;
+            toast.role = 'alert';
+            toast.ariaLive = 'assertive';
+            toast.ariaAtomic = 'true';
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+            toastContainer.appendChild(toast);
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+            setTimeout(() => {
+                bsToast.hide();
+                setTimeout(() => toast.remove(), 500); // Wait for fade out
+            }, 5000);
+        }
+
         // Sidebar Toggle for Mobile
         $(document).ready(function () {
             $('#sidebarToggle').click(function (e) {
