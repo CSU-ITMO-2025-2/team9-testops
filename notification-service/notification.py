@@ -7,7 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
 from confluent_kafka import Consumer
 import uvicorn
-from prometheus_client import start_http_server, Counter
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST, Counter
+from fastapi import FastAPI, Request, Response
 
 # Configuration
 KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
@@ -121,6 +122,10 @@ async def message_stream(request: Request):
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.get("/metrics")
+def metrics():
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 def main():
     # Run Uvicorn

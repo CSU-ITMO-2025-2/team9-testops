@@ -31,6 +31,12 @@ data:
           - targets: ['test-execute-consumer.{{ .Values.global.namespace }}.svc.cluster.local:8001']
         metrics_path: '/metrics'
 
+      # Scrape Notification service metrics
+      - job_name: 'notification-service'
+        static_configs:
+          - targets: ['team9-notification.{{ .Values.global.namespace }}.svc.cluster.local:8002']
+        metrics_path: '/metrics'
+
       # Scrape PostgreSQL metrics (postgres_exporter)
       - job_name: 'postgresql'
         static_configs:
@@ -114,6 +120,22 @@ data:
             target_label: __metrics_path__
             replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
 
+        metrics_path: '/metrics'
+
+      # Scrape Chaos Mesh metrics
+      - job_name: 'chaos-mesh'
+        kubernetes_sd_configs:
+          - role: service
+            namespaces:
+              names: ['chaos-mesh']
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_label_app_kubernetes_io_name]
+            action: keep
+            regex: chaos-mesh-controller-manager
+          - source_labels: [__meta_kubernetes_service_port_number]
+            action: keep
+            regex: '10080'
+
       # Kube-state-metrics (pod resource requests, deployment status, etc.)
       - job_name: 'kube-state-metrics'
         static_configs:
@@ -127,6 +149,6 @@ data:
           password_file: /etc/secrets/grafana-api-key
         write_relabel_configs:
           - source_labels: [__name__]
-            regex: '(test_cases_status|django_.*|http_.*|pg_.*|kafka_.*|node_.*|kube_.*|container_.*)'
+            regex: '(test_cases_status|notifications_sent|django_.*|http_.*|pg_.*|kafka_.*|node_.*|kube_.*|container_.*|chaos_mesh_.*)'
             action: keep
 {{- end }}
