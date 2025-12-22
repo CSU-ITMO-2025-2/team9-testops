@@ -238,6 +238,36 @@ entries:
   team9-infra:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2025-12-22T07:07:07.167657035Z"
+    dependencies:
+    - condition: postgres.enabled
+      name: postgres
+      repository: ""
+      version: 1.0.0
+    - condition: kafka.enabled
+      name: kafka
+      repository: ""
+      version: 1.0.0
+    - name: shared
+      repository: ""
+      version: 1.0.0
+    - condition: prometheus.enabled
+      name: prometheus
+      repository: ""
+      version: 1.0.0
+    description: Infrastructure components for TestOps platform (PostgreSQL, Kafka,
+      shared resources)
+    digest: 00e3d606293595fcf1991e25046ec5c15501e9ba44a125fee18827d8edea71b6
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-infra
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-infra-1.2.62/team9-infra-1.2.62.tgz
+    version: 1.2.62
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2025-12-22T06:50:49.928054787Z"
     dependencies:
     - condition: postgres.enabled
@@ -1467,6 +1497,19 @@ entries:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-infra-1.2.21/team9-infra-1.2.21.tgz
     version: 1.2.21
   team9-notification:
+  - apiVersion: v2
+    appVersion: 666e9bc
+    created: "2025-12-22T07:07:07.319144315Z"
+    description: Notification service for TestOps platform
+    digest: 83c736c775bf1ffdb0520dec13901bc96710b0362e1faaae30816b0213c8ee12
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-notification
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-notification-0.1.8/team9-notification-0.1.8.tgz
+    version: 0.1.8
   - apiVersion: v2
     appVersion: d7bd3ea
     created: "2025-12-22T06:50:50.075410878Z"
@@ -2886,4 +2929,4 @@ entries:
     urls:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/testops-publisher-1.4.10/testops-publisher-1.4.10.tgz
     version: 1.4.10
-generated: "2025-12-22T06:50:50.461151943Z"
+generated: "2025-12-22T07:07:07.319605942Z"
