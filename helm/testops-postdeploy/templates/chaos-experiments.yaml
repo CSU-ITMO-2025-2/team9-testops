@@ -58,7 +58,7 @@ spec:
     namespaces:
       - {{ .Values.namespace }}
     labelSelectors:
-      app: kafka
+      app: test-execute-consumer
   delay:
     latency: {{ .Values.chaos.networkDelay.latency | quote }}
     correlation: "25"
