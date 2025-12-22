@@ -35,3 +35,27 @@ monitoring:
       enabled: false
       interval: 30s
       path: /metrics
+
+# Chaos Mesh Experiments
+chaos:
+  enabled: true
+  podFailure:
+    enabled: true
+    action: pod-kill
+  networkDelay:
+    enabled: true
+    latency: "100ms"
+  cpuStress:
+    enabled: true
+    load: 80
+  memoryStress:
+    enabled: true
+    percentage: 80
+  kafkaPartition:
+    enabled: true
+
+# Analysis Templates for Rollouts
+analysis:
+  enabled: true
+  grafana:
+    prometheusUrl: "https://prometheus-prod-43-prod-ap-south-1.grafana.net/api/prom"
