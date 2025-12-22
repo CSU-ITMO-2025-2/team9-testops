@@ -6,6 +6,8 @@ kind: PodChaos
 metadata:
   name: pod-failure-django
   namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "testops-postdeploy.labels" . | nindent 4 }}
 spec:
   action: pod-failure
   mode: one
@@ -23,6 +25,8 @@ kind: PodChaos
 metadata:
   name: pod-kill-consumer
   namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "testops-postdeploy.labels" . | nindent 4 }}
 spec:
   action: pod-kill
   mode: fixed
@@ -45,6 +49,8 @@ kind: NetworkChaos
 metadata:
   name: network-delay-kafka
   namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "testops-postdeploy.labels" . | nindent 4 }}
 spec:
   action: delay
   mode: all
@@ -69,6 +75,8 @@ kind: StressChaos
 metadata:
   name: cpu-stress-django
   namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "testops-postdeploy.labels" . | nindent 4 }}
 spec:
   mode: one
   selector:

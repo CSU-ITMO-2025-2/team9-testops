@@ -5,7 +5,7 @@ metadata:
   name: team9-publisher-analysis
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "ai-testops.labels" . | nindent 4 }}
+    {{- include "testops-postdeploy.labels" . | nindent 4 }}
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:

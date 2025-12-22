@@ -22,6 +22,20 @@ spec:
           allowConsumerToKafka: true
           allowExternalToDjango: true
           denyAllByDefault: false
+
+        # Chaos Mesh Experiments
+        chaos:
+          enabled: true
+          podFailure:
+            enabled: true
+          networkDelay:
+            enabled: true
+          cpuStress:
+            enabled: true
+
+        # Analysis Templates
+        analysis:
+          enabled: true
   
   destination:
     server: https://kubernetes.default.svc
