@@ -20,6 +20,9 @@ networkPolicies:
 
   # Allow Kafka UI to communicate with Kafka
   allowKafkaUIToKafka: true
+
+  # Allow KEDA to communicate with Kafka (for scaling)
+  allowKEDAToKafka: true
   
   # Deny all other traffic by default
   denyAllByDefault: false
