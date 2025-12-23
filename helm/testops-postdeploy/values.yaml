@@ -17,6 +17,9 @@ networkPolicies:
   
   # Allow external traffic to Django app
   allowExternalToDjango: true
+
+  # Allow Kafka UI to communicate with Kafka
+  allowKafkaUIToKafka: true
   
   # Deny all other traffic by default
   denyAllByDefault: false
