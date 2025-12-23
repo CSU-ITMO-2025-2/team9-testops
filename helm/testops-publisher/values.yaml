@@ -64,3 +64,7 @@ ingress:
     - hosts:
         - team9.kubepractice.ru
       secretName: tls-secret
+
+# Analysis Templates for Rollouts
+analysis:
+  enabled: true

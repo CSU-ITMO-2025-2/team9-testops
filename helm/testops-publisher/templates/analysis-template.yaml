@@ -2,10 +2,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
-  name: team9-publisher-analysis
+  name: {{ .Values.djangoApp.name }}-analysis
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "testops-postdeploy.labels" . | nindent 4 }}
+    {{- include "ai-testops.labels" . | nindent 4 }}
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
@@ -24,7 +24,7 @@ spec:
     consecutiveErrorLimit: 8
     provider:
       prometheus:
-        address: {{ .Values.analysis.grafana.prometheusUrl | quote }}
+        address: {{ .Values.monitoring.grafana.prometheusUrl | quote }}
         headers:
         - key: Authorization
           value: "Basic {{`{{args.grafana-auth}}`}}"
@@ -51,19 +51,19 @@ spec:
     consecutiveErrorLimit: 8
     provider:
       prometheus:
-        address: {{ .Values.analysis.grafana.prometheusUrl | quote }}
+        address: {{ .Values.monitoring.grafana.prometheusUrl | quote }}
         headers:
         - key: Authorization
           value: "Basic {{`{{args.grafana-auth}}`}}"
         query: |
           (
             sum(rate(container_cpu_usage_seconds_total{
-              pod=~"team9-publisher-.*",
+              pod=~"{{ .Values.djangoApp.name }}-.*",
               container!="POD"
             }[1m]))
             /
             sum(kube_pod_container_resource_requests{
-              pod=~"team9-publisher-.*",
+              pod=~"{{ .Values.djangoApp.name }}-.*",
               resource="cpu"
             })
           )
