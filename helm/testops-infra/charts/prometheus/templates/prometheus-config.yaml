@@ -49,35 +49,12 @@ data:
           - targets: ['kafka.{{ .Values.global.namespace }}.svc.cluster.local:9092']
         metrics_path: '/metrics'
 
-      # Kubernetes API server metrics
-      - job_name: 'kubernetes-apiservers'
-        kubernetes_sd_configs:
-          - role: endpoints
-        scheme: https
-        tls_config:
-          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        relabel_configs:
-          - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
-            action: keep
-            regex: default;kubernetes;https
-
-      # Kubernetes nodes metrics
-      - job_name: 'kubernetes-nodes'
-        kubernetes_sd_configs:
-          - role: node
-        scheme: https
-        tls_config:
-          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        relabel_configs:
-          - action: labelmap
-            regex: __meta_kubernetes_node_label_(.+)
-
       # Kubernetes pods metrics
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
           - role: pod
+            namespaces:
+              names: [{{ .Values.global.namespace | quote }}]
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
@@ -99,48 +76,6 @@ data:
           - source_labels: [__meta_kubernetes_pod_name]
             action: replace
             target_label: kubernetes_pod_name
-
-      # Kubelet cAdvisor metrics (container CPU, memory, etc.)
-      - job_name: 'kubernetes-cadvisor'
-        kubernetes_sd_configs:
-          - role: node
-        scheme: https
-        tls_config:
-          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-          insecure_skip_verify: true
-        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        metrics_path: /metrics/cadvisor
-        relabel_configs:
-          - action: labelmap
-            regex: __meta_kubernetes_node_label_(.+)
-          - target_label: __address__
-            replacement: kubernetes.default.svc:443
-          - source_labels: [__meta_kubernetes_node_name]
-            regex: (.+)
-            target_label: __metrics_path__
-            replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
-
-        metrics_path: '/metrics'
-
-      # Scrape Chaos Mesh metrics
-      - job_name: 'chaos-mesh'
-        kubernetes_sd_configs:
-          - role: service
-            namespaces:
-              names: ['chaos-mesh']
-        relabel_configs:
-          - source_labels: [__meta_kubernetes_service_label_app_kubernetes_io_name]
-            action: keep
-            regex: chaos-mesh-controller-manager
-          - source_labels: [__meta_kubernetes_service_port_number]
-            action: keep
-            regex: '10080'
-
-      # Kube-state-metrics (pod resource requests, deployment status, etc.)
-      - job_name: 'kube-state-metrics'
-        static_configs:
-          - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080']
-        metrics_path: '/metrics'
 
     remote_write:
       - url: {{ .Values.global.monitoring.grafana.prometheusUrl }}
