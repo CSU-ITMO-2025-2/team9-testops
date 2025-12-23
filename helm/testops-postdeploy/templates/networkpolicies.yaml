@@ -66,6 +66,9 @@ spec:
     - podSelector:
         matchLabels:
           app: team9-publisher
+    - podSelector:
+        matchLabels:
+          app: kafka-topic-init
     ports:
     - protocol: TCP
       port: 9092
