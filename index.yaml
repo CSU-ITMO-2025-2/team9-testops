@@ -1647,6 +1647,19 @@ entries:
   team9-postdeploy:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2025-12-23T07:56:16.232982415Z"
+    description: Post-deployment resources for TestOps (NetworkPolicies, Monitoring)
+    digest: c75b5522d8cd5d8ec8face8bd5557958f84b3e07449f2f39a5e3834a1f7128ad
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-postdeploy
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-postdeploy-1.1.36/team9-postdeploy-1.1.36.tgz
+    version: 1.1.36
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2025-12-23T07:45:53.944138779Z"
     description: Post-deployment resources for TestOps (NetworkPolicies, Monitoring)
     digest: 1ff124d8d5b2fb6422c7c3020d5193e3adc903d8c8bada045b7e630465941194
@@ -3059,4 +3072,4 @@ entries:
     urls:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/testops-publisher-1.4.10/testops-publisher-1.4.10.tgz
     version: 1.4.10
-generated: "2025-12-23T07:48:11.56672583Z"
+generated: "2025-12-23T07:56:16.377290829Z"
