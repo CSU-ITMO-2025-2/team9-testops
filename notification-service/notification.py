@@ -50,36 +50,39 @@ async def kafka_listener():
 
     try:
         while True:
-            # Poll for messages (non-blocking effectively due to sleep in loop)
-            # In async loop, we should not block long.
-            # We can run the poll in an executor or just poll with short timeout.
-            msg = consumer.poll(0.1) 
+            # Consume messages in batches (up to 50 messages at a time)
+            msgs = consumer.consume(num_messages=50, timeout=1.0)
             
-            if msg is None:
+            if not msgs:
                 await asyncio.sleep(0.1)
                 continue
             
-            if msg.error():
-                logger.error(f"Consumer error: {msg.error()}")
-                continue
+            for msg in msgs:
+                if msg.error():
+                    logger.error(f"Consumer error: {msg.error()}")
+                    continue
 
-            try:
-                payload = msg.value().decode('utf-8')
-                logger.info(f"Received notification: {payload}")
-                data = json.loads(payload)
-                
-                # Update metrics
-                NOTIFICATIONS_SENT.labels(status='success').inc()
+                try:
+                    payload = msg.value().decode('utf-8')
+                    logger.info(f"Received notification: {payload}")
+                    data = json.loads(payload)
+                    
+                    # Update metrics
+                    NOTIFICATIONS_SENT.labels(status='success').inc()
 
-                # Broadcast to all connected clients
-                if clients:
-                    logger.info(f"Broadcasting to {len(clients)} clients")
-                    for queue in clients:
-                        await queue.put(data)
+                    # Broadcast to all connected clients
+                    if clients:
+                        logger.info(f"Broadcasting to {len(clients)} clients")
+                        # Use a task to not block the consumer loop too much if there are many clients
+                        for queue in clients:
+                            await queue.put(data)
+                    
+                except Exception as e:
+                    logger.error(f"Error processing message: {e}")
+                    NOTIFICATIONS_SENT.labels(status='error').inc()
                 
-            except Exception as e:
-                logger.error(f"Error processing message: {e}")
-                NOTIFICATIONS_SENT.labels(status='error').inc()
+            # Yield control back to event loop after processing a batch
+            await asyncio.sleep(0)
                 
     except Exception as e:
         logger.error(f"Kafka listener crashed: {e}")
