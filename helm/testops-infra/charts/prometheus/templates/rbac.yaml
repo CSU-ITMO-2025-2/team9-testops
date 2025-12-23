@@ -11,17 +11,16 @@ metadata:
     argocd.argoproj.io/sync-wave: "3"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
-  name: {{ .Values.global.namespace }}-prometheus-role
+  name: prometheus-role
+  namespace: {{ .Values.global.namespace }}
   labels:
     app: prometheus
     {{- include "ai-testops.labels" . | nindent 4 }}
 rules:
 - apiGroups: [""]
   resources:
-  - nodes
-  - nodes/proxy
   - services
   - endpoints
   - pods
@@ -34,16 +33,17 @@ rules:
   verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
-  name: {{ .Values.global.namespace }}-prometheus-rolebinding
+  name: prometheus-rolebinding
+  namespace: {{ .Values.global.namespace }}
   labels:
     app: prometheus
     {{- include "ai-testops.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: {{ .Values.global.namespace }}-prometheus-role
+  kind: Role
+  name: prometheus-role
 subjects:
 - kind: ServiceAccount
   name: prometheus-sa
