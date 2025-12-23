@@ -52,4 +52,4 @@ chaos:
     enabled: true
     percentage: 80
   kafkaPartition:
-    enabled: true
+    enabled: false
