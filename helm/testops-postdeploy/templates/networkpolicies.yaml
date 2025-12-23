@@ -201,4 +201,31 @@ spec:
     - protocol: TCP
       port: 9092
 {{- end }}
+
+{{- if .Values.networkPolicies.allowNotificationToKafka }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-notification-to-kafka
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "testops-postdeploy.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  podSelector:
+    matchLabels:
+      app: kafka
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: team9-notification
+    ports:
+    - protocol: TCP
+      port: 9092
+{{- end }}
 {{- end }}

@@ -23,6 +23,9 @@ networkPolicies:
 
   # Allow KEDA to communicate with Kafka (for scaling)
   allowKEDAToKafka: true
+
+  # Allow Notification service to communicate with Kafka
+  allowNotificationToKafka: true
   
   # Deny all other traffic by default
   denyAllByDefault: false
