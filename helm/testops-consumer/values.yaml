@@ -27,11 +27,11 @@ consumer:
       cpu: "100m"
     limits:
       memory: "256Mi"
-      cpu: "200m"
+      cpu: "100m"
   autoscaling:
     enabled: false  # Disable HPA for consumer - scale based on Kafka lag instead
-    minReplicas: 2
-    maxReplicas: 8
+    minReplicas: 1
+    maxReplicas: 5
     targetCPUUtilizationPercentage: 70
 
 # Kafka connection (external to this chart)
@@ -47,7 +47,7 @@ keda:
   cooldownPeriod: 300
   consumer:
     minReplicas: 1
-    maxReplicas: 10
+    maxReplicas: 5
     consumerGroup: "test_group"
     topic: "test_run_queue"
     lagThreshold: "5"
