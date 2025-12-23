@@ -2,8 +2,8 @@ apiVersion: v2
 name: team9-notification
 description: Notification service for TestOps platform
 type: application
-version: 0.1.8
-appVersion: "666e9bc"
+version: 0.1.9
+appVersion: "d08f966"
 maintainers:
   - name: Duc Truong
     email: thduc.dev@gmail.com
