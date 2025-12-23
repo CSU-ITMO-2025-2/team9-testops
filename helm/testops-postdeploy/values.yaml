@@ -44,7 +44,7 @@ chaos:
     action: pod-kill
   networkDelay:
     enabled: true
-    latency: "100ms"
+    latency: "10ms"
   cpuStress:
     enabled: true
     load: 80
