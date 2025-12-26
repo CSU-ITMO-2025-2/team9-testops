@@ -15,12 +15,11 @@ service:
 # Pod probes configuration. Set `enabled: false` to disable a probe.
 probes:
   enabled: true
-  # Liveness probe: checks the container is alive. Default: HTTP GET /health on metricsPort
   livenessProbe:
     enabled: true
     httpGet:
       path: /health
-      port: metricsPort
+      port: 8002
     initialDelaySeconds: 10
     periodSeconds: 10
     timeoutSeconds: 5
@@ -32,7 +31,7 @@ probes:
     enabled: true
     httpGet:
       path: /ready
-      port: metricsPort
+      port: 8002
     initialDelaySeconds: 5
     periodSeconds: 10
     timeoutSeconds: 5
@@ -44,7 +43,7 @@ probes:
     enabled: false
     httpGet:
       path: /health
-      port: metricsPort
+      port: 8002
     failureThreshold: 30
     periodSeconds: 10
 

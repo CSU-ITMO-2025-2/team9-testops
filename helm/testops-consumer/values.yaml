@@ -38,10 +38,9 @@ consumer:
     enabled: true
     livenessProbe:
       enabled: true
-      # By default consumer exposes metrics port; adjust path if your consumer serves health endpoints
       httpGet:
         path: /health
-        port: metricsPort
+        port: 8001
       initialDelaySeconds: 10
       periodSeconds: 10
       timeoutSeconds: 5
@@ -51,7 +50,7 @@ consumer:
       enabled: true
       httpGet:
         path: /ready
-        port: metricsPort
+        port: 8001
       initialDelaySeconds: 5
       periodSeconds: 10
       timeoutSeconds: 5
@@ -61,7 +60,7 @@ consumer:
       enabled: false
       httpGet:
         path: /health
-        port: metricsPort
+        port: 8001
       failureThreshold: 30
       periodSeconds: 10
 
