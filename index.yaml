@@ -2,6 +2,19 @@ apiVersion: v1
 entries:
   team9-consumer:
   - apiVersion: v2
+    appVersion: d239c5a
+    created: "2025-12-26T11:09:31.916213929Z"
+    description: Consumer service for TestOps platform
+    digest: 6e452727635cf694fd02dcfe324ef78d75cc1c31aaf2ecfab60db898ca215130
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-consumer
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-consumer-1.1.32/team9-consumer-1.1.32.tgz
+    version: 1.1.32
+  - apiVersion: v2
     appVersion: c45a8b3
     created: "2025-12-26T11:01:42.614757522Z"
     description: Consumer service for TestOps platform
@@ -1699,6 +1712,19 @@ entries:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-infra-1.2.21/team9-infra-1.2.21.tgz
     version: 1.2.21
   team9-notification:
+  - apiVersion: v2
+    appVersion: d239c5a
+    created: "2025-12-26T11:09:32.052741079Z"
+    description: Notification service for TestOps platform
+    digest: 9c5c6fe2ae7fd9a90a0858935714f8aff4239bd9de184600cce3b12eb6c50b5f
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-notification
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-notification-0.1.11/team9-notification-0.1.11.tgz
+    version: 0.1.11
   - apiVersion: v2
     appVersion: c45a8b3
     created: "2025-12-26T11:01:42.770872777Z"
@@ -3407,4 +3433,4 @@ entries:
     urls:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/testops-publisher-1.4.10/testops-publisher-1.4.10.tgz
     version: 1.4.10
-generated: "2025-12-26T11:01:42.771250213Z"
+generated: "2025-12-26T11:09:32.053175673Z"
