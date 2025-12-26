@@ -2,6 +2,19 @@ apiVersion: v1
 entries:
   team9-consumer:
   - apiVersion: v2
+    appVersion: a5d6150
+    created: "2025-12-26T12:27:37.592661594Z"
+    description: Consumer service for TestOps platform
+    digest: d5eb3da53cb6a6b6d875a89ea69e9891ead6e728e9dd3881ec1c2d94b3b51f36
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-consumer
+    type: application
+    urls:
+    - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-consumer-1.1.33/team9-consumer-1.1.33.tgz
+    version: 1.1.33
+  - apiVersion: v2
     appVersion: d239c5a
     created: "2025-12-26T11:09:31.916213929Z"
     description: Consumer service for TestOps platform
@@ -3433,4 +3446,4 @@ entries:
     urls:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/testops-publisher-1.4.10/testops-publisher-1.4.10.tgz
     version: 1.4.10
-generated: "2025-12-26T11:09:32.053175673Z"
+generated: "2025-12-26T12:27:37.593070852Z"
