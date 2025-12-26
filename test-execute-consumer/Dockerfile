@@ -11,6 +11,7 @@ WORKDIR /code
 # Install dependencies
 COPY ../requirements.txt /code/
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir flask 
 
 # Copy watch.py from parent
 COPY ../watch.py /code/

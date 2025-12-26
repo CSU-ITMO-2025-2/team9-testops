@@ -5,6 +5,8 @@ import subprocess
 import requests
 import json
 from prometheus_client import start_http_server, Counter
+from flask import Flask, jsonify
+from threading import Thread
 
 KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
 PUBLISHER_URL = os.getenv('PUBLISHER_URL', 'http://localhost:8000')
@@ -13,6 +15,23 @@ NOTIFICATION_QUEUE = 'notification_queue'
 
 # Prometheus metrics
 TEST_CASES_STATUS = Counter('test_cases_status', 'Status of test cases', ['test_case_id', 'status'])
+
+# Create Flask app for health and readiness probes
+probe_app = Flask(__name__)
+
+@probe_app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"})
+
+@probe_app.route('/ready', methods=['GET'])
+def ready():
+    return jsonify({"status": "ready"})
+
+def start_probe_server():
+    probe_app.run(host='0.0.0.0', port=8002, threaded=True)
+
+# Start the probe server in a separate thread
+Thread(target=start_probe_server, daemon=True).start()
 
 def listen_for_kafka_messages():
     consumer = Consumer({

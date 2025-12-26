@@ -126,6 +126,10 @@ async def message_stream(request: Request):
 def health():
     return {"status": "ok"}
 
+@app.get("/ready")
+def readiness():
+    return {"status": "ready"}
+
 @app.get("/metrics")
 def metrics():
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)

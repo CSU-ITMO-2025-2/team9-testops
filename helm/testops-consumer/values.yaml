@@ -13,7 +13,7 @@ consumer:
   replicaCount: 1
   image:
     repository: vanlahuynhduc/ai-testops-consumer
-    tag: "00e4bfc"
+    tag: "latest"
   service:
     type: ClusterIP
     port: 8080
@@ -33,6 +33,37 @@ consumer:
     minReplicas: 1
     maxReplicas: 5
     targetCPUUtilizationPercentage: 70
+  # Pod probes configuration for the consumer container
+  probes:
+    enabled: true
+    livenessProbe:
+      enabled: true
+      # By default consumer exposes metrics port; adjust path if your consumer serves health endpoints
+      httpGet:
+        path: /health
+        port: metricsPort
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+      successThreshold: 1
+    readinessProbe:
+      enabled: true
+      httpGet:
+        path: /ready
+        port: metricsPort
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+      successThreshold: 1
+    startupProbe:
+      enabled: false
+      httpGet:
+        path: /health
+        port: metricsPort
+      failureThreshold: 30
+      periodSeconds: 10
 
 # Kafka connection (external to this chart)
 kafka:

@@ -54,6 +54,52 @@ spec:
           protocol: TCP
         resources:
           {{- toYaml .Values.consumer.resources | nindent 10 }}
+        {{- if .Values.consumer.probes.enabled }}
+        {{- with .Values.consumer.probes.livenessProbe }}
+        {{- if .enabled }}
+        livenessProbe:
+          {{- if .httpGet }}
+          httpGet:
+            path: {{ .httpGet.path }}
+            port: {{ .httpGet.port }}
+          {{- end }}
+          initialDelaySeconds: {{ .initialDelaySeconds }}
+          periodSeconds: {{ .periodSeconds }}
+          timeoutSeconds: {{ .timeoutSeconds }}
+          failureThreshold: {{ .failureThreshold }}
+          successThreshold: {{ .successThreshold }}
+        {{- end }}
+        {{- end }}
+
+        {{- with .Values.consumer.probes.readinessProbe }}
+        {{- if .enabled }}
+        readinessProbe:
+          {{- if .httpGet }}
+          httpGet:
+            path: {{ .httpGet.path }}
+            port: {{ .httpGet.port }}
+          {{- end }}
+          initialDelaySeconds: {{ .initialDelaySeconds }}
+          periodSeconds: {{ .periodSeconds }}
+          timeoutSeconds: {{ .timeoutSeconds }}
+          failureThreshold: {{ .failureThreshold }}
+          successThreshold: {{ .successThreshold }}
+        {{- end }}
+        {{- end }}
+
+        {{- with .Values.consumer.probes.startupProbe }}
+        {{- if .enabled }}
+        startupProbe:
+          {{- if .httpGet }}
+          httpGet:
+            path: {{ .httpGet.path }}
+            port: {{ .httpGet.port }}
+          {{- end }}
+          failureThreshold: {{ .failureThreshold }}
+          periodSeconds: {{ .periodSeconds }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
 ---
 apiVersion: v1
 kind: Service
