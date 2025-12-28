@@ -52,6 +52,13 @@ spec:
         - name: metrics
           containerPort: {{ .Values.consumer.service.metricsPort }}
           protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8002
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 3
         resources:
           {{- toYaml .Values.consumer.resources | nindent 10 }}
         {{- if .Values.consumer.probes.enabled }}

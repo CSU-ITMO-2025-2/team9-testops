@@ -7,8 +7,8 @@
 [![GitOps](https://img.shields.io/badge/GitOps-100000?logo=git&logoColor=white)](https://www.gitops.tech/)
 
 > **Курс**: Проектирование и разработка распределенных программных систем  
-> **Университет**: [Your University]  
-> **Команда**: [Team Members]
+> **Университет**: ITMO University  
+> **Команда**: Truong Huynh Duc
 
 ## 📋 Navigation
 
