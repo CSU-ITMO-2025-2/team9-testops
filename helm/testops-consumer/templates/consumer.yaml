@@ -55,7 +55,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /ready
-            port: 8002
+            port: {{ .Values.consumer.probes.readinessProbe.httpGet.port }}
           initialDelaySeconds: 5
           periodSeconds: 5
           failureThreshold: 3
