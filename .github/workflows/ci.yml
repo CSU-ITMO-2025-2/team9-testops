@@ -17,616 +17,726 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  changes:
+  # ============================================================================
+  # STAGE 1: DETECT CHANGES
+  # ============================================================================
+  detect-changes:
+    name: Detect Changes
     runs-on: ubuntu-latest
     outputs:
-      django: ${{ steps.changes.outputs.django }}
-      consumer: ${{ steps.changes.outputs.consumer }}
-      notification: ${{ steps.changes.outputs.notification }}
-      helm_infra: ${{ steps.changes.outputs.helm_infra }}
-      helm_publisher: ${{ steps.changes.outputs.helm_publisher }}
-      helm_consumer: ${{ steps.changes.outputs.helm_consumer }}
-      helm_notification: ${{ steps.changes.outputs.helm_notification }}
-      helm_postdeploy: ${{ steps.changes.outputs.helm_postdeploy }}
-      argocd: ${{ steps.changes.outputs.argocd }}
+      version: ${{ steps.version.outputs.VERSION }}
+      django_changed: ${{ steps.changes.outputs.django }}
+      consumer_changed: ${{ steps.changes.outputs.consumer }}
+      notification_changed: ${{ steps.changes.outputs.notification }}
+      helm_infra_changed: ${{ steps.changes.outputs.helm_infra }}
+      helm_publisher_changed: ${{ steps.changes.outputs.helm_publisher }}
+      helm_consumer_changed: ${{ steps.changes.outputs.helm_consumer }}
+      helm_notification_changed: ${{ steps.changes.outputs.helm_notification }}
+      helm_postdeploy_changed: ${{ steps.changes.outputs.helm_postdeploy }}
+      argocd_changed: ${{ steps.changes.outputs.argocd }}
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          fetch-depth: 0
-      - name: Check for changes
-        id: changes
-        uses: dorny/paths-filter@v2
-        with:
-          filters: |
-            django:
-              - 'canvas/**'
-              - 'api_tests/**'
-              - 'home/**'
-              - 'templates/**'
-              - 'static/**'
-              - 'Dockerfile'
-              - 'requirements.txt'
-              - 'manage.py'
-            consumer:
-              - 'test-execute-consumer/**'
-              - 'watch.py'
-              - 'requirements.txt'
-            notification:
-              - 'notification-service/**'
-            helm_infra:
-              - 'helm/testops-infra/**'
-            helm_publisher:
-              - 'helm/testops-publisher/**'
-            helm_consumer:
-              - 'helm/testops-consumer/**'
-            helm_notification:
-              - 'helm/testops-notification/**'
-            helm_postdeploy:
-              - 'helm/testops-postdeploy/**'
-            argocd:
-              - 'argocd/**'
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+      
+    - name: Generate version tag
+      id: version
+      run: |
+        VERSION=${GITHUB_SHA::7}
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "Generated version: $VERSION"
+    
+    - name: Check for changes
+      uses: dorny/paths-filter@v2
+      id: changes
+      with:
+        filters: |
+          django:
+            - 'canvas/**'
+            - 'api_tests/**'
+            - 'home/**'
+            - 'templates/**'
+            - 'static/**'
+            - 'Dockerfile'
+            - 'requirements.txt'
+            - 'manage.py'
+          consumer:
+            - 'test-execute-consumer/**'
+            - 'watch.py'
+            - 'requirements.txt'
+          notification:
+            - 'notification-service/**'
+          helm_infra:
+            - 'helm/testops-infra/**'
+          helm_publisher:
+            - 'helm/testops-publisher/**'
+          helm_consumer:
+            - 'helm/testops-consumer/**'
+          helm_notification:
+            - 'helm/testops-notification/**'
+          helm_postdeploy:
+            - 'helm/testops-postdeploy/**'
+          argocd:
+            - 'argocd/**'
 
-  version:
-    runs-on: ubuntu-latest
-    outputs:
-      VERSION: ${{ steps.version.outputs.VERSION }}
-    steps:
-      - name: Generate version tag
-        id: version
-        run: |
-          VERSION=${GITHUB_SHA::7}
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Generated version: $VERSION"
-
+  # ============================================================================
+  # STAGE 2: BUILD IMAGES (PARALLEL)
+  # ============================================================================
   build-django:
+    name: Build Django Image
+    needs: detect-changes
+    if: needs.detect-changes.outputs.django_changed == 'true' || github.event.inputs.force_rebuild == 'true'
     runs-on: ubuntu-latest
-    needs: [changes, version]
-    if: needs.changes.outputs.django == 'true' || github.event.inputs.force_rebuild == 'true'
+    permissions:
+      packages: write
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          fetch-depth: 0
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build and push Django app image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/ai-testops:${{ needs.version.outputs.VERSION }}
-            ${{ secrets.DOCKER_USERNAME }}/ai-testops:latest
-          platforms: linux/amd64,linux/arm64
-
-  build-consumer:
-    runs-on: ubuntu-latest
-    needs: [changes, version]
-    if: needs.changes.outputs.consumer == 'true' || github.event.inputs.force_rebuild == 'true'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          fetch-depth: 0
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build and push Consumer image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./test-execute-consumer/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/ai-testops-consumer:${{ needs.version.outputs.VERSION }}
-            ${{ secrets.DOCKER_USERNAME }}/ai-testops-consumer:latest
-          platforms: linux/amd64,linux/arm64
-
-  build-notification:
-    runs-on: ubuntu-latest
-    needs: [changes, version]
-    if: needs.changes.outputs.notification == 'true' || github.event.inputs.force_rebuild == 'true'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          fetch-depth: 0
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build and push Notification service image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./notification-service
-          file: ./notification-service/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/ai-testops-notification:${{ needs.version.outputs.VERSION }}
-            ${{ secrets.DOCKER_USERNAME }}/ai-testops-notification:latest
-          platforms: linux/amd64,linux/arm64
-
-  bump-helm-charts:
-    runs-on: ubuntu-latest
-    needs: [changes, version]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          fetch-depth: 0
-      # ...existing logic for bumping helm chart versions...
-      # (Copy the bump logic from the original job here)
-
-  update-image-tags:
-    runs-on: ubuntu-latest
-    needs: [bump-helm-charts, build-django, build-consumer, build-notification]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          fetch-depth: 0
-      # ...existing logic for updating image tags in values.yaml...
-
-  commit-and-tag:
-    runs-on: ubuntu-latest
-    needs: [update-image-tags]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          fetch-depth: 0
-      # ...existing logic for commit and push changes, create and push git tags...
-
-  release:
-    runs-on: ubuntu-latest
-    needs: [commit-and-tag]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          fetch-depth: 0
-      # ...existing logic for Helm, chart-releaser, and GitHub Release...
-          
-          # Bump notification if notification code changes
-          if [ "${{ steps.changes.outputs.notification }}" == "true" ]; then
-            BUMP_NOTIFICATION=true
-          fi
-          
-          # Bump specific charts if their helm templates change
-          if [ "${{ steps.changes.outputs.helm_infra }}" == "true" ]; then
-            BUMP_INFRA=true
-          fi
-          
-          if [ "${{ steps.changes.outputs.helm_publisher }}" == "true" ]; then
-            BUMP_PUBLISHER=true
-          fi
-          
-          if [ "${{ steps.changes.outputs.helm_consumer }}" == "true" ]; then
-            BUMP_CONSUMER=true
-          fi
-          
-          if [ "${{ steps.changes.outputs.helm_notification }}" == "true" ]; then
-            BUMP_NOTIFICATION=true
-          fi
-          
-          if [ "${{ steps.changes.outputs.helm_postdeploy }}" == "true" ]; then
-            BUMP_POSTDEPLOY=true
-          fi
-          
-          # Bump all charts if argocd configs change (affects all deployments)
-          if [ "${{ steps.changes.outputs.argocd }}" == "true" ]; then
-            BUMP_INFRA=true
-            BUMP_PUBLISHER=true
-            BUMP_CONSUMER=true
-            BUMP_NOTIFICATION=true
-            BUMP_POSTDEPLOY=true
-          fi
-        fi
-        
-        # Bump testops-infra
-        if [ "$BUMP_INFRA" == "true" ]; then
-          CURRENT_VERSION=$(grep '^version:' helm/testops-infra/Chart.yaml | awk '{print $2}')
-          IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
-          NEW_PATCH=$((patch + 1))
-          INFRA_VERSION="${major}.${minor}.${NEW_PATCH}"
-          sed -i "s/^version:.*/version: $INFRA_VERSION/" helm/testops-infra/Chart.yaml
-          echo "INFRA_VERSION=$INFRA_VERSION" >> $GITHUB_OUTPUT
-          echo "Bumped testops-infra: $CURRENT_VERSION -> $INFRA_VERSION"
-        else
-          INFRA_VERSION=$(grep '^version:' helm/testops-infra/Chart.yaml | awk '{print $2}')
-          echo "INFRA_VERSION=$INFRA_VERSION" >> $GITHUB_OUTPUT
-        fi
-        
-        # Bump testops-publisher
-        if [ "$BUMP_PUBLISHER" == "true" ]; then
-          CURRENT_VERSION=$(grep '^version:' helm/testops-publisher/Chart.yaml | awk '{print $2}')
-          IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
-          NEW_PATCH=$((patch + 1))
-          PUBLISHER_VERSION="${major}.${minor}.${NEW_PATCH}"
-          sed -i "s/^version:.*/version: $PUBLISHER_VERSION/" helm/testops-publisher/Chart.yaml
-          sed -i "s/^appVersion:.*/appVersion: \"${{ steps.version.outputs.VERSION }}\"/" helm/testops-publisher/Chart.yaml
-          echo "PUBLISHER_VERSION=$PUBLISHER_VERSION" >> $GITHUB_OUTPUT
-          echo "Bumped testops-publisher: $CURRENT_VERSION -> $PUBLISHER_VERSION"
-        else
-          PUBLISHER_VERSION=$(grep '^version:' helm/testops-publisher/Chart.yaml | awk '{print $2}')
-          echo "PUBLISHER_VERSION=$PUBLISHER_VERSION" >> $GITHUB_OUTPUT
-        fi
-        
-        # Bump testops-consumer
-        if [ "$BUMP_CONSUMER" == "true" ]; then
-          CURRENT_VERSION=$(grep '^version:' helm/testops-consumer/Chart.yaml | awk '{print $2}')
-          IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
-          NEW_PATCH=$((patch + 1))
-          CONSUMER_VERSION="${major}.${minor}.${NEW_PATCH}"
-          sed -i "s/^version:.*/version: $CONSUMER_VERSION/" helm/testops-consumer/Chart.yaml
-          sed -i "s/^appVersion:.*/appVersion: \"${{ steps.version.outputs.VERSION }}\"/" helm/testops-consumer/Chart.yaml
-          echo "CONSUMER_VERSION=$CONSUMER_VERSION" >> $GITHUB_OUTPUT
-          echo "Bumped testops-consumer: $CURRENT_VERSION -> $CONSUMER_VERSION"
-        else
-          CONSUMER_VERSION=$(grep '^version:' helm/testops-consumer/Chart.yaml | awk '{print $2}')
-          echo "CONSUMER_VERSION=$CONSUMER_VERSION" >> $GITHUB_OUTPUT
-        fi
-        
-        # Bump testops-notification
-        if [ "$BUMP_NOTIFICATION" == "true" ]; then
-          CURRENT_VERSION=$(grep '^version:' helm/testops-notification/Chart.yaml | awk '{print $2}')
-          IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
-          NEW_PATCH=$((patch + 1))
-          NOTIFICATION_VERSION="${major}.${minor}.${NEW_PATCH}"
-          sed -i "s/^version:.*/version: $NOTIFICATION_VERSION/" helm/testops-notification/Chart.yaml
-          sed -i "s/^appVersion:.*/appVersion: \"${{ steps.version.outputs.VERSION }}\"/" helm/testops-notification/Chart.yaml
-          echo "NOTIFICATION_VERSION=$NOTIFICATION_VERSION" >> $GITHUB_OUTPUT
-          echo "Bumped testops-notification: $CURRENT_VERSION -> $NOTIFICATION_VERSION"
-        else
-          NOTIFICATION_VERSION=$(grep '^version:' helm/testops-notification/Chart.yaml | awk '{print $2}')
-          echo "NOTIFICATION_VERSION=$NOTIFICATION_VERSION" >> $GITHUB_OUTPUT
-        fi
-        
-        # Bump testops-postdeploy
-        if [ "$BUMP_POSTDEPLOY" == "true" ]; then
-          CURRENT_VERSION=$(grep '^version:' helm/testops-postdeploy/Chart.yaml | awk '{print $2}')
-          IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
-          NEW_PATCH=$((patch + 1))
-          POSTDEPLOY_VERSION="${major}.${minor}.${NEW_PATCH}"
-          sed -i "s/^version:.*/version: $POSTDEPLOY_VERSION/" helm/testops-postdeploy/Chart.yaml
-          echo "POSTDEPLOY_VERSION=$POSTDEPLOY_VERSION" >> $GITHUB_OUTPUT
-          echo "Bumped testops-postdeploy: $CURRENT_VERSION -> $POSTDEPLOY_VERSION"
-        else
-          POSTDEPLOY_VERSION=$(grep '^version:' helm/testops-postdeploy/Chart.yaml | awk '{print $2}')
-          echo "POSTDEPLOY_VERSION=$POSTDEPLOY_VERSION" >> $GITHUB_OUTPUT
-        fi
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
     
     - name: Build and push Django app image
-      if: steps.changes.outputs.django == 'true' || github.event.inputs.force_rebuild == 'true'
       uses: docker/build-push-action@v4
       with:
         context: .
         file: ./Dockerfile
         push: true
         tags: |
-          ${{ secrets.DOCKER_USERNAME }}/ai-testops:${{ steps.version.outputs.VERSION }}
-          ${{ secrets.DOCKER_USERNAME }}/ai-testops:v${{ steps.chart_version.outputs.CHART_VERSION }}
+          ${{ secrets.DOCKER_USERNAME }}/ai-testops:${{ needs.detect-changes.outputs.version }}
           ${{ secrets.DOCKER_USERNAME }}/ai-testops:latest
         platforms: linux/amd64,linux/arm64
+        cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/ai-testops:buildcache
+        cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/ai-testops:buildcache,mode=max
+
+  build-consumer:
+    name: Build Consumer Image
+    needs: detect-changes
+    if: needs.detect-changes.outputs.consumer_changed == 'true' || github.event.inputs.force_rebuild == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
     
     - name: Build and push Consumer image
-      if: steps.changes.outputs.consumer == 'true' || github.event.inputs.force_rebuild == 'true'
       uses: docker/build-push-action@v4
       with:
         context: .
         file: ./test-execute-consumer/Dockerfile
         push: true
         tags: |
-          ${{ secrets.DOCKER_USERNAME }}/ai-testops-consumer:${{ steps.version.outputs.VERSION }}
-          ${{ secrets.DOCKER_USERNAME }}/ai-testops-consumer:v${{ steps.chart_version.outputs.CHART_VERSION }}
+          ${{ secrets.DOCKER_USERNAME }}/ai-testops-consumer:${{ needs.detect-changes.outputs.version }}
           ${{ secrets.DOCKER_USERNAME }}/ai-testops-consumer:latest
         platforms: linux/amd64,linux/arm64
+        cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/ai-testops-consumer:buildcache
+        cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/ai-testops-consumer:buildcache,mode=max
+
+  build-notification:
+    name: Build Notification Image
+    needs: detect-changes
+    if: needs.detect-changes.outputs.notification_changed == 'true' || github.event.inputs.force_rebuild == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
         
     - name: Build and push Notification service image
-      if: steps.changes.outputs.notification == 'true' || github.event.inputs.force_rebuild == 'true'
       uses: docker/build-push-action@v4
       with:
         context: ./notification-service
         file: ./notification-service/Dockerfile
         push: true
         tags: |
-          ${{ secrets.DOCKER_USERNAME }}/ai-testops-notification:${{ steps.version.outputs.VERSION }}
-          ${{ secrets.DOCKER_USERNAME }}/ai-testops-notification:v${{ steps.chart_version.outputs.CHART_VERSION }}
+          ${{ secrets.DOCKER_USERNAME }}/ai-testops-notification:${{ needs.detect-changes.outputs.version }}
           ${{ secrets.DOCKER_USERNAME }}/ai-testops-notification:latest
         platforms: linux/amd64,linux/arm64
+        cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/ai-testops-notification:buildcache
+        cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/ai-testops-notification:buildcache,mode=max
+
+  # ============================================================================
+  # STAGE 3: UPDATE HELM CHARTS (PARALLEL - MỖI CHART MỘT NHÁNH)
+  # ============================================================================
+  
+  # Nhánh 1: Infra Chart
+  update-chart-infra:
+    name: Update Infra Chart
+    needs: [detect-changes]
+    if: |
+      needs.detect-changes.outputs.helm_infra_changed == 'true' || 
+      needs.detect-changes.outputs.argocd_changed == 'true' ||
+      github.event.inputs.force_rebuild == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      chart_version: ${{ steps.bump.outputs.CHART_VERSION }}
     
-    - name: Update image tags in values.yaml
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.PAT_TOKEN }}
+        fetch-depth: 0
+    
+    - name: Bump chart version
+      id: bump
       run: |
-        if [ "${{ steps.changes.outputs.django }}" == "true" ] || [ "${{ github.event.inputs.force_rebuild }}" == "true" ]; then
-          echo "Updating Django app image tag to ${{ steps.version.outputs.VERSION }}"
-          sed -i "/djangoApp:/,/service:/ s|tag:.*|tag: \"${{ steps.version.outputs.VERSION }}\"|" helm/testops-publisher/values.yaml
-        fi
+        CURRENT_VERSION=$(grep '^version:' helm/testops-infra/Chart.yaml | awk '{print $2}')
+        IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+        NEW_PATCH=$((patch + 1))
+        CHART_VERSION="${major}.${minor}.${NEW_PATCH}"
         
-        if [ "${{ steps.changes.outputs.consumer }}" == "true" ] || [ "${{ github.event.inputs.force_rebuild }}" == "true" ]; then
-          echo "Updating Consumer image tag to ${{ steps.version.outputs.VERSION }}"
-          sed -i "/consumer:/,/service:/ s|tag:.*|tag: \"${{ steps.version.outputs.VERSION }}\"|" helm/testops-consumer/values.yaml
-        fi
+        sed -i "s/^version:.*/version: $CHART_VERSION/" helm/testops-infra/Chart.yaml
         
-        if [ "${{ steps.changes.outputs.notification }}" == "true" ] || [ "${{ github.event.inputs.force_rebuild }}" == "true" ]; then
-          echo "Updating Notification service image tag to ${{ steps.version.outputs.VERSION }}"
-          sed -i "/image:/,/service:/ s|tag:.*|tag: \"${{ steps.version.outputs.VERSION }}\"|" helm/testops-notification/values.yaml
-        fi
-        
+        echo "CHART_VERSION=$CHART_VERSION" >> $GITHUB_OUTPUT
+        echo "Bumped testops-infra: $CURRENT_VERSION -> $CHART_VERSION"
+    
     - name: Set git identity
       run: |
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        
-    - name: Commit and push changes
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && (github.ref == 'refs/heads/main' || github.event.inputs.force_rebuild == 'true')
-      run: |
-        git add helm/*/values.yaml helm/*/Chart.yaml helm/*/Chart.lock
-        if git diff --staged --quiet; then
-          echo "No changes to commit"
-          exit 0
-        fi
-        git commit -m "chore: bump charts (infra:${{ steps.chart_version.outputs.INFRA_VERSION }}, publisher:${{ steps.chart_version.outputs.PUBLISHER_VERSION }}, consumer:${{ steps.chart_version.outputs.CONSUMER_VERSION }}, notification:${{ steps.chart_version.outputs.NOTIFICATION_VERSION }}) [skip ci]"
-        git pull --rebase
-        git push origin HEAD:${{ github.ref_name }}
     
-    - name: Create and push Git tags
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && (github.ref == 'refs/heads/main' || github.event.inputs.force_rebuild == 'true')
+    - name: Commit changes
       run: |
-        # Main release tag
-        RELEASE_TAG="testops-${{ steps.version.outputs.VERSION }}"
-        if git rev-parse "$RELEASE_TAG" >/dev/null 2>&1; then
-          echo "Tag $RELEASE_TAG already exists"
-        else
-          git tag -a "$RELEASE_TAG" -m "Release ${{ steps.version.outputs.VERSION }}"
-          git push origin "$RELEASE_TAG"
-        fi
-        
-        # Tag for infra chart
-        if git rev-parse "testops-infra-${{ steps.chart_version.outputs.INFRA_VERSION }}" >/dev/null 2>&1; then
-          echo "Tag testops-infra-${{ steps.chart_version.outputs.INFRA_VERSION }} already exists"
-        else
-          git tag -a "testops-infra-${{ steps.chart_version.outputs.INFRA_VERSION }}" -m "Release testops-infra ${{ steps.chart_version.outputs.INFRA_VERSION }}"
-          git push origin "testops-infra-${{ steps.chart_version.outputs.INFRA_VERSION }}"
-        fi
-        
-        # Tag for publisher chart
-        if git rev-parse "testops-publisher-${{ steps.chart_version.outputs.PUBLISHER_VERSION }}" >/dev/null 2>&1; then
-          echo "Tag testops-publisher-${{ steps.chart_version.outputs.PUBLISHER_VERSION }} already exists"
-        else
-          git tag -a "testops-publisher-${{ steps.chart_version.outputs.PUBLISHER_VERSION }}" -m "Release testops-publisher ${{ steps.chart_version.outputs.PUBLISHER_VERSION }}"
-          git push origin "testops-publisher-${{ steps.chart_version.outputs.PUBLISHER_VERSION }}"
-        fi
-        
-        # Tag for consumer chart
-        if git rev-parse "testops-consumer-${{ steps.chart_version.outputs.CONSUMER_VERSION }}" >/dev/null 2>&1; then
-          echo "Tag testops-consumer-${{ steps.chart_version.outputs.CONSUMER_VERSION }} already exists"
-        else
-          git tag -a "testops-consumer-${{ steps.chart_version.outputs.CONSUMER_VERSION }}" -m "Release testops-consumer ${{ steps.chart_version.outputs.CONSUMER_VERSION }}"
-          git push origin "testops-consumer-${{ steps.chart_version.outputs.CONSUMER_VERSION }}"
-        fi
-        
-        # Tag for notification chart
-        if git rev-parse "testops-notification-${{ steps.chart_version.outputs.NOTIFICATION_VERSION }}" >/dev/null 2>&1; then
-          echo "Tag testops-notification-${{ steps.chart_version.outputs.NOTIFICATION_VERSION }} already exists"
-        else
-          git tag -a "testops-notification-${{ steps.chart_version.outputs.NOTIFICATION_VERSION }}" -m "Release testops-notification ${{ steps.chart_version.outputs.NOTIFICATION_VERSION }}"
-          git push origin "testops-notification-${{ steps.chart_version.outputs.NOTIFICATION_VERSION }}"
-        fi
-        
-        # Tag for postdeploy chart
-        if git rev-parse "testops-postdeploy-${{ steps.chart_version.outputs.POSTDEPLOY_VERSION }}" >/dev/null 2>&1; then
-          echo "Tag testops-postdeploy-${{ steps.chart_version.outputs.POSTDEPLOY_VERSION }} already exists"
-        else
-          git tag -a "testops-postdeploy-${{ steps.chart_version.outputs.POSTDEPLOY_VERSION }}" -m "Release testops-postdeploy ${{ steps.chart_version.outputs.POSTDEPLOY_VERSION }}"
-          git push origin "testops-postdeploy-${{ steps.chart_version.outputs.POSTDEPLOY_VERSION }}"
-        fi
+        git add helm/testops-infra/Chart.yaml helm/testops-infra/Chart.lock
+        git commit -m "chore(infra): bump chart to ${{ steps.bump.outputs.CHART_VERSION }} [skip ci]" || echo "No changes to commit"
     
-    - name: Install Helm
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && (github.ref == 'refs/heads/main' || github.event.inputs.force_rebuild == 'true')
-      uses: azure/setup-helm@v3
+    - name: Push changes
+      run: |
+        git pull --rebase origin main
+        git push origin HEAD:main
+
+  # Nhánh 2: Publisher Chart
+  update-chart-publisher:
+    name: Update Publisher Chart
+    needs: [detect-changes, build-django]
+    if: |
+      always() &&
+      (needs.detect-changes.outputs.django_changed == 'true' || 
+       needs.detect-changes.outputs.helm_publisher_changed == 'true' ||
+       needs.detect-changes.outputs.argocd_changed == 'true' ||
+       github.event.inputs.force_rebuild == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      chart_version: ${{ steps.bump.outputs.CHART_VERSION }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
       with:
-        version: v3.13.0
+        token: ${{ secrets.PAT_TOKEN }}
+        fetch-depth: 0
     
-    - name: Update Helm dependencies
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && (github.ref == 'refs/heads/main' || github.event.inputs.force_rebuild == 'true')
+    - name: Bump chart version
+      id: bump
       run: |
-        echo "Updating Helm dependencies for charts with dependencies..."
+        CURRENT_VERSION=$(grep '^version:' helm/testops-publisher/Chart.yaml | awk '{print $2}')
+        IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+        NEW_PATCH=$((patch + 1))
+        CHART_VERSION="${major}.${minor}.${NEW_PATCH}"
         
-        # Update testops-infra dependencies (has prometheus subchart)
-        if [ -f "helm/testops-infra/Chart.yaml" ]; then
-          echo "Updating testops-infra dependencies..."
-          helm dependency update helm/testops-infra
-        fi
+        sed -i "s/^version:.*/version: $CHART_VERSION/" helm/testops-publisher/Chart.yaml
+        sed -i "s/^appVersion:.*/appVersion: \"${{ needs.detect-changes.outputs.version }}\"/" helm/testops-publisher/Chart.yaml
         
-        # Commit updated Chart.lock if changed
-        if ! git diff --quiet helm/*/Chart.lock; then
-          git add helm/*/Chart.lock
-          git commit -m "chore: update Chart.lock files [skip ci]" || echo "No Chart.lock changes to commit"
-          git push origin main
-        fi
+        echo "CHART_VERSION=$CHART_VERSION" >> $GITHUB_OUTPUT
+        echo "Bumped testops-publisher: $CURRENT_VERSION -> $CHART_VERSION"
     
-    - name: Run chart-releaser to update index.yaml
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && (github.ref == 'refs/heads/main' || github.event.inputs.force_rebuild == 'true')
-      uses: helm/chart-releaser-action@v1.6.0
+    - name: Update image tag in values.yaml
+      if: needs.detect-changes.outputs.django_changed == 'true' || github.event.inputs.force_rebuild == 'true'
+      run: |
+        echo "Updating Django app image tag to ${{ needs.detect-changes.outputs.version }}"
+        sed -i "/djangoApp:/,/service:/ s|tag:.*|tag: \"${{ needs.detect-changes.outputs.version }}\"|" helm/testops-publisher/values.yaml
+    
+    - name: Set git identity
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Commit changes
+      run: |
+        git add helm/testops-publisher/Chart.yaml helm/testops-publisher/values.yaml helm/testops-publisher/Chart.lock
+        git commit -m "chore(publisher): bump chart to ${{ steps.bump.outputs.CHART_VERSION }} [skip ci]" || echo "No changes to commit"
+    
+    - name: Push changes
+      run: |
+        git pull --rebase origin main
+        git push origin HEAD:main
+
+  # Nhánh 3: Consumer Chart
+  update-chart-consumer:
+    name: Update Consumer Chart
+    needs: [detect-changes, build-consumer]
+    if: |
+      always() &&
+      (needs.detect-changes.outputs.consumer_changed == 'true' || 
+       needs.detect-changes.outputs.helm_consumer_changed == 'true' ||
+       needs.detect-changes.outputs.argocd_changed == 'true' ||
+       github.event.inputs.force_rebuild == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      chart_version: ${{ steps.bump.outputs.CHART_VERSION }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
       with:
-        charts_dir: helm
-        skip_existing: true
-      env:
-        CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        token: ${{ secrets.PAT_TOKEN }}
+        fetch-depth: 0
     
-    - name: Verify chart-releaser output
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && (github.ref == 'refs/heads/main' || github.event.inputs.force_rebuild == 'true')
+    - name: Bump chart version
+      id: bump
       run: |
-        echo "Checking chart-releaser output directory..."
-        ls -la .cr-release-packages/ 2>/dev/null || echo "No .cr-release-packages directory"
-        echo "Checking gh-pages branch for index.yaml..."
-        git fetch origin gh-pages
-        git show origin/gh-pages:index.yaml | head -20 || echo "index.yaml not found on gh-pages"
+        CURRENT_VERSION=$(grep '^version:' helm/testops-consumer/Chart.yaml | awk '{print $2}')
+        IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+        NEW_PATCH=$((patch + 1))
+        CHART_VERSION="${major}.${minor}.${NEW_PATCH}"
+        
+        sed -i "s/^version:.*/version: $CHART_VERSION/" helm/testops-consumer/Chart.yaml
+        sed -i "s/^appVersion:.*/appVersion: \"${{ needs.detect-changes.outputs.version }}\"/" helm/testops-consumer/Chart.yaml
+        
+        echo "CHART_VERSION=$CHART_VERSION" >> $GITHUB_OUTPUT
+        echo "Bumped testops-consumer: $CURRENT_VERSION -> $CHART_VERSION"
     
-    - name: Update index.html on gh-pages to trigger ArgoCD
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && (github.ref == 'refs/heads/main' || github.event.inputs.force_rebuild == 'true')
+    - name: Update image tag in values.yaml
+      if: needs.detect-changes.outputs.consumer_changed == 'true' || github.event.inputs.force_rebuild == 'true'
       run: |
-        # Stash any local changes before switching branches
-        git stash
-        git fetch origin gh-pages
-        git checkout gh-pages
-        
-        # Create index.html that dynamically reads index.yaml
-        cat > index.html << 'EOF'
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>TestOps Helm Charts</title>
-          <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-            .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-            h1 { color: #333; border-bottom: 3px solid #007bff; padding-bottom: 10px; }
-            h2 { color: #555; margin-top: 30px; margin-bottom: 15px; }
-            .repo-info { background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0; }
-            code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: 'Courier New', monospace; }
-            .chart-section { margin: 20px 0; }
-            .versions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
-            .version-badge { display: inline-block; background: #007bff; color: white; padding: 4px 8px; border-radius: 3px; font-size: 12px; }
-            .version-badge.old { background: #6c757d; }
-            #loading { text-align: center; color: #666; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>📦 TestOps Helm Repository</h1>
-            <div class="repo-info">
-              <p><strong>Repository URL:</strong> <code>https://csu-itmo-2025-2.github.io/team9-testops/</code></p>
-              <p><strong>Last Updated:</strong> <span id="timestamp">-</span></p>
-            </div>
-            <div id="content">
-              <div id="loading">⏳ Loading chart versions...</div>
-            </div>
-          </div>
-          <script>
-            fetch('index.yaml')
-              .then(response => response.text())
-              .then(data => {
-                const timestamp = new Date().toLocaleString();
-                document.getElementById('timestamp').textContent = timestamp;
-                
-                // Parse YAML format - helm chart-releaser format
-                const lines = data.split('\n');
-                const charts = {};
-                let currentChart = null;
-
-                for (let i = 0; i < lines.length; i++) {
-                  const line = lines[i];
-                  // Match chart name like "  testops-infra:" or "  testops:"
-                  if (line.match(/^  [a-zA-Z0-9-]+:$/) && !line.includes('entries')) {
-                    currentChart = line.replace(':', '').trim();
-                    charts[currentChart] = [];
-                  }
-                  // Match version line like "    version: 1.2.0"
-                  else if (currentChart && line.match(/^\s+version:\s/)) {
-                    const version = line.split(':')[1].trim().replace(/"/g, '');
-                    charts[currentChart].push(version);
-                  }
-                }
-
-                // Helper to sort semver desc
-                const compareSemverDesc = (a, b) => {
-                  const pa = a.split('.').map(Number);
-                  const pb = b.split('.').map(Number);
-                  const len = Math.max(pa.length, pb.length);
-                  for (let i = 0; i < len; i++) {
-                    const da = pa[i] || 0;
-                    const db = pb[i] || 0;
-                    if (da !== db) return db - da; // desc
-                  }
-                  return 0;
-                };
-
-                // Generate HTML
-                const content = document.getElementById('content');
-                content.innerHTML = '';
-
-                for (const [chart, versions] of Object.entries(charts)) {
-                  if (versions.length === 0) continue;
-
-                  const uniq = Array.from(new Set(versions));
-                  const top10 = uniq.sort(compareSemverDesc).slice(0, 10);
-
-                  const section = document.createElement('div');
-                  section.className = 'chart-section';
-
-                  let html = `<h2>${chart}</h2><div class="versions">`;
-                  top10.forEach((v, idx) => {
-                    const badgeClass = idx === 0 ? 'version-badge' : 'version-badge old';
-                    html += `<span class="${badgeClass}">${v}</span>`;
-                  });
-                  html += '</div>';
-
-                  section.innerHTML = html;
-                  content.appendChild(section);
-                }
-              })
-              .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('content').innerHTML = '<p style="color: red;">❌ Error loading chart versions</p>';
-              });
-          </script>
-        </body>
-        </html>
-        EOF
-        
-        git add index.html
-        git commit -m "Update index.html (infra:${{ steps.chart_version.outputs.INFRA_VERSION }}, publisher:${{ steps.chart_version.outputs.PUBLISHER_VERSION }}, consumer:${{ steps.chart_version.outputs.CONSUMER_VERSION }}, notification:${{ steps.chart_version.outputs.NOTIFICATION_VERSION }}, postdeploy:${{ steps.chart_version.outputs.POSTDEPLOY_VERSION }})" || echo "No changes"
-        git push origin gh-pages
-        
-        git checkout main
+        echo "Updating Consumer image tag to ${{ needs.detect-changes.outputs.version }}"
+        sed -i "/consumer:/,/service:/ s|tag:.*|tag: \"${{ needs.detect-changes.outputs.version }}\"|" helm/testops-consumer/values.yaml
     
-    - name: Create GitHub Release
-      if: (steps.changes.outputs.django == 'true' || steps.changes.outputs.consumer == 'true' || steps.changes.outputs.notification == 'true' || steps.changes.outputs.helm_infra == 'true' || steps.changes.outputs.helm_publisher == 'true' || steps.changes.outputs.helm_consumer == 'true' || steps.changes.outputs.helm_notification == 'true' || steps.changes.outputs.helm_postdeploy == 'true' || steps.changes.outputs.argocd == 'true' || github.event.inputs.force_rebuild == 'true') && (github.ref == 'refs/heads/main' || github.event.inputs.force_rebuild == 'true')
-      uses: softprops/action-gh-release@v1
+    - name: Set git identity
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Commit changes
+      run: |
+        git add helm/testops-consumer/Chart.yaml helm/testops-consumer/values.yaml helm/testops-consumer/Chart.lock
+        git commit -m "chore(consumer): bump chart to ${{ steps.bump.outputs.CHART_VERSION }} [skip ci]" || echo "No changes to commit"
+    
+    - name: Push changes
+      run: |
+        git pull --rebase origin main
+        git push origin HEAD:main
+
+  # Nhánh 4: Notification Chart
+  update-chart-notification:
+    name: Update Notification Chart
+    needs: [detect-changes, build-notification]
+    if: |
+      always() &&
+      (needs.detect-changes.outputs.notification_changed == 'true' || 
+       needs.detect-changes.outputs.helm_notification_changed == 'true' ||
+       needs.detect-changes.outputs.argocd_changed == 'true' ||
+       github.event.inputs.force_rebuild == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      chart_version: ${{ steps.bump.outputs.CHART_VERSION }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
       with:
-        tag_name: testops-${{ steps.version.outputs.VERSION }}
-        name: Release testops-${{ steps.version.outputs.VERSION }}
-        body: |
-          ## 📦 Chart Versions
-          - **testops-infra**: `${{ steps.chart_version.outputs.INFRA_VERSION }}`
-          - **testops-publisher**: `${{ steps.chart_version.outputs.PUBLISHER_VERSION }}`
-          - **testops-consumer**: `${{ steps.chart_version.outputs.CONSUMER_VERSION }}`
-          - **testops-notification**: `${{ steps.chart_version.outputs.NOTIFICATION_VERSION }}`
-          - **testops-postdeploy**: `${{ steps.chart_version.outputs.POSTDEPLOY_VERSION }}`
-          
-          ## 🐳 Docker Images
-          - `${{ secrets.DOCKER_USERNAME }}/ai-testops:${{ steps.version.outputs.VERSION }}`
-          - `${{ secrets.DOCKER_USERNAME }}/ai-testops-consumer:${{ steps.version.outputs.VERSION }}`
-          - `${{ secrets.DOCKER_USERNAME }}/ai-testops-notification:${{ steps.version.outputs.VERSION }}`
-          
-          ## 🔄 Updated Components
-          ${{ steps.changes.outputs.django == 'true' && '- ✅ Django app (publisher)\n' || '' }}${{ steps.changes.outputs.consumer == 'true' && '- ✅ Consumer\n' || '' }}${{ steps.changes.outputs.notification == 'true' && '- ✅ Notification Service\n' || '' }}${{ steps.changes.outputs.helm == 'true' && '- ✅ Helm charts\n' || '' }}${{ steps.changes.outputs.argocd == 'true' && '- ✅ ArgoCD config\n' || '' }}
-          
-          **Commit**: `${{ steps.version.outputs.VERSION }}`
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.PAT_TOKEN }}
+        fetch-depth: 0
+    
+    - name: Bump chart version
+      id: bump
+      run: |
+        CURRENT_VERSION=$(grep '^version:' helm/testops-notification/Chart.yaml | awk '{print $2}')
+        IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+        NEW_PATCH=$((patch + 1))
+        CHART_VERSION="${major}.${minor}.${NEW_PATCH}"
+        
+        sed -i "s/^version:.*/version: $CHART_VERSION/" helm/testops-notification/Chart.yaml
+        sed -i "s/^appVersion:.*/appVersion: \"${{ needs.detect-changes.outputs.version }}\"/" helm/testops-notification/Chart.yaml
+        
+        echo "CHART_VERSION=$CHART_VERSION" >> $GITHUB_OUTPUT
+        echo "Bumped testops-notification: $CURRENT_VERSION -> $CHART_VERSION"
+    
+    - name: Update image tag in values.yaml
+      if: needs.detect-changes.outputs.notification_changed == 'true' || github.event.inputs.force_rebuild == 'true'
+      run: |
+        echo "Updating Notification service image tag to ${{ needs.detect-changes.outputs.version }}"
+        sed -i "/image:/,/service:/ s|tag:.*|tag: \"${{ needs.detect-changes.outputs.version }}\"|" helm/testops-notification/values.yaml
+    
+    - name: Set git identity
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Commit changes
+      run: |
+        git add helm/testops-notification/Chart.yaml helm/testops-notification/values.yaml helm/testops-notification/Chart.lock
+        git commit -m "chore(notification): bump chart to ${{ steps.bump.outputs.CHART_VERSION }} [skip ci]" || echo "No changes to commit"
+    
+    - name: Push changes
+      run: |
+        git pull --rebase origin main
+        git push origin HEAD:main
+
+  # Nhánh 5: Postdeploy Chart
+  update-chart-postdeploy:
+    name: Update Postdeploy Chart
+    needs: [detect-changes]
+    if: |
+      needs.detect-changes.outputs.helm_postdeploy_changed == 'true' ||
+      needs.detect-changes.outputs.argocd_changed == 'true' ||
+      github.event.inputs.force_rebuild == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      chart_version: ${{ steps.bump.outputs.CHART_VERSION }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.PAT_TOKEN }}
+        fetch-depth: 0
+    
+    - name: Bump chart version
+      id: bump
+      run: |
+        CURRENT_VERSION=$(grep '^version:' helm/testops-postdeploy/Chart.yaml | awk '{print $2}')
+        IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+        NEW_PATCH=$((patch + 1))
+        CHART_VERSION="${major}.${minor}.${NEW_PATCH}"
+        
+        sed -i "s/^version:.*/version: $CHART_VERSION/" helm/testops-postdeploy/Chart.yaml
+        
+        echo "CHART_VERSION=$CHART_VERSION" >> $GITHUB_OUTPUT
+        echo "Bumped testops-postdeploy: $CURRENT_VERSION -> $CHART_VERSION"
+    
+    - name: Set git identity
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Commit changes
+      run: |
+        git add helm/testops-postdeploy/Chart.yaml helm/testops-postdeploy/Chart.lock
+        git commit -m "chore(postdeploy): bump chart to ${{ steps.bump.outputs.CHART_VERSION }} [skip ci]" || echo "No changes to commit"
+    
+    - name: Push changes
+      run: |
+        git pull --rebase origin main
+        git push origin HEAD:main
+
+  # ============================================================================
+  # STAGE 4: CREATE GIT TAGS (PARALLEL - MỖI CHART MỘT NHÁNH)
+  # ============================================================================
+  
+  # Nhánh Tag 1: Main Release Tag
+  create-tag-release:
+    name: Create Release Tag
+    needs: [detect-changes]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.PAT_TOKEN }}
+        fetch-depth: 0
+        ref: main
+    
+    - name: Set git identity
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Create release tag
+      run: |
+        TAG_NAME="testops-${{ needs.detect-changes.outputs.version }}"
+        if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+          git tag -a "$TAG_NAME" -m "Release ${{ needs.detect-changes.outputs.version }}"
+          git push origin "$TAG_NAME"
+          echo "Created tag: $TAG_NAME"
+        else
+          echo "Tag $TAG_NAME already exists"
+        fi
+
+  # Nhánh Tag 2: Infra Chart Tag
+  create-tag-infra:
+    name: Create Infra Chart Tag
+    needs: [update-chart-infra]
+    if: |
+      always() &&
+      needs.update-chart-infra.result == 'success' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.PAT_TOKEN }}
+        fetch-depth: 0
+        ref: main
+    
+    - name: Set git identity
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Create chart tag
+      run: |
+        TAG_NAME="testops-infra-${{ needs.update-chart-infra.outputs.chart_version }}"
+        if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+          git tag -a "$TAG_NAME" -m "Release testops-infra ${{ needs.update-chart-infra.outputs.chart_version }}"
+          git push origin "$TAG_NAME"
+          echo "Created tag: $TAG_NAME"
+        else
+          echo "Tag $TAG_NAME already exists"
+        fi
+
+  # Nhánh Tag 3: Publisher Chart Tag
+  create-tag-publisher:
+    name: Create Publisher Chart Tag
+    needs: [update-chart-publisher]
+    if: |
+      always() &&
+      needs.update-chart-publisher.result == 'success' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.PAT_TOKEN }}
+        fetch-depth: 0
+        ref: main
+    
+    - name: Set git identity
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Create chart tag
+      run: |
+        TAG_NAME="testops-publisher-${{ needs.update-chart-publisher.outputs.chart_version }}"
+        if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+          git tag -a "$TAG_NAME" -m "Release testops-publisher ${{ needs.update-chart-publisher.outputs.chart_version }}"
+          git push origin "$TAG_NAME"
+          echo "Created tag: $TAG_NAME"
+        else
+          echo "Tag $TAG_NAME already exists"
+        fi
+
+  # Nhánh Tag 4: Consumer Chart Tag
+  create-tag-consumer:
+    name: Create Consumer Chart Tag
+    needs: [update-chart-consumer]
+    if: |
+      always() &&
+      needs.update-chart-consumer.result == 'success' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.PAT_TOKEN }}
+        fetch-depth: 0
+        ref: main
+    
+    - name: Set git identity
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Create chart tag
+      run: |
+        TAG_NAME="testops-consumer-${{ needs.update-chart-consumer.outputs.chart_version }}"
+        if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+          git tag -a "$TAG_NAME" -m "Release testops-consumer ${{ needs.update-chart-consumer.outputs.chart_version }}"
+          git push origin "$TAG_NAME"
+          echo "Created tag: $TAG_NAME"
+        else
+          echo "Tag $TAG_NAME already exists"
+        fi
+
+  # Nhánh Tag 5: Notification Chart Tag
+  create-tag-notification:
+    name: Create Notification Chart Tag
+    needs: [update-chart-notification]
+    if: |
+      always() &&
+      needs.update-chart-notification.result == 'success' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.PAT_TOKEN }}
+        fetch-depth: 0
+        ref: main
+    
+    - name: Set git identity
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Create chart tag
+      run: |
+        TAG_NAME="testops-notification-${{ needs.update-chart-notification.outputs.chart_version }}"
+        if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+          git tag -a "$TAG_NAME" -m "Release testops-notification ${{ needs.update-chart-notification.outputs.chart_version }}"
+          git push origin "$TAG_NAME"
+          echo "Created tag: $TAG_NAME"
+        else
+          echo "Tag $TAG_NAME already exists"
+        fi
+
+  # Nhánh Tag 6: Postdeploy Chart Tag
+  create-tag-postdeploy:
+    name: Create Postdeploy Chart Tag
+    needs: [update-chart-postdeploy]
+    if: |
+      always() &&
+      needs.update-chart-postdeploy.result == 'success' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.PAT_TOKEN }}
+        fetch-depth: 0
+        ref: main
+    
+    - name: Set git identity
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Create chart tag
+      run: |
+        TAG_NAME="testops-postdeploy-${{ needs.update-chart-postdeploy.outputs.chart_version }}"
+        if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+          git tag -a "$TAG_NAME" -m "Release testops-postdeploy ${{ needs.update-chart-postdeploy.outputs.chart_version }}"
+          git push origin "$TAG_NAME"
+          echo "Created tag: $TAG_NAME"
+        else
+          echo "Tag $TAG_NAME already exists"
+        fi
+
+  # ============================================================================
+  # STAGE 5: DEPLOYMENT SUMMARY
+  # ============================================================================
+  deployment-summary:
+    name: Deployment Summary
+    needs: 
+      - detect-changes
+      - build-django
+      - build-consumer
+      - build-notification
+      - update-chart-infra
+      - update-chart-publisher
+      - update-chart-consumer
+      - update-chart-notification
+      - update-chart-postdeploy
+      - create-tag-release
+      - create-tag-infra
+      - create-tag-publisher
+      - create-tag-consumer
+      - create-tag-notification
+      - create-tag-postdeploy
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Generate deployment summary
+      run: |
+        echo "# 🚀 CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        echo "## 📦 Version Information" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Version:** \`${{ needs.detect-changes.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        echo "## 🔨 Build Status" >> $GITHUB_STEP_SUMMARY
+        echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Django Image | ${{ needs.build-django.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Consumer Image | ${{ needs.build-consumer.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Notification Image | ${{ needs.build-notification.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        echo "## 📊 Helm Chart Updates" >> $GITHUB_STEP_SUMMARY
+        echo "| Chart | Version | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-------|---------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Infra | \`${{ needs.update-chart-infra.outputs.chart_version || 'unchanged' }}\` | ${{ needs.update-chart-infra.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Publisher | \`${{ needs.update-chart-publisher.outputs.chart_version || 'unchanged' }}\` | ${{ needs.update-chart-publisher.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Consumer | \`${{ needs.update-chart-consumer.outputs.chart_version || 'unchanged' }}\` | ${{ needs.update-chart-consumer.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Notification | \`${{ needs.update-chart-notification.outputs.chart_version || 'unchanged' }}\` | ${{ needs.update-chart-notification.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Postdeploy | \`${{ needs.update-chart-postdeploy.outputs.chart_version || 'unchanged' }}\` | ${{ needs.update-chart-postdeploy.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        echo "## 🏷️ Git Tags" >> $GITHUB_STEP_SUMMARY
+        echo "| Tag Type | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Release | ${{ needs.create-tag-release.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Infra Chart | ${{ needs.create-tag-infra.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Publisher Chart | ${{ needs.create-tag-publisher.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Consumer Chart | ${{ needs.create-tag-consumer.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Notification Chart | ${{ needs.create-tag-notification.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Postdeploy Chart | ${{ needs.create-tag-postdeploy.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
