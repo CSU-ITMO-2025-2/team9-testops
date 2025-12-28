@@ -187,7 +187,7 @@ jobs:
         cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/ai-testops-notification:buildcache,mode=max
 
   # ============================================================================
-  # STAGE 3: UPDATE HELM CHARTS (PARALLEL - MỖI CHART MỘT NHÁNH)
+  # STAGE 3: UPDATE HELM CHARTS (SEQUENTIAL - TRÁNH CONFLICT)
   # ============================================================================
   
   # Nhánh 1: Infra Chart
@@ -210,6 +210,11 @@ jobs:
       with:
         token: ${{ secrets.PAT_TOKEN }}
         fetch-depth: 0
+        ref: main
+    
+    - name: Pull latest changes
+      run: |
+        git pull origin main
     
     - name: Bump chart version
       id: bump
@@ -248,7 +253,7 @@ jobs:
   # Nhánh 2: Publisher Chart
   update-chart-publisher:
     name: Update Publisher Chart
-    needs: [detect-changes, build-django]
+    needs: [detect-changes, build-django, update-chart-infra]
     if: |
       always() &&
       (needs.detect-changes.outputs.django_changed == 'true' || 
@@ -267,6 +272,11 @@ jobs:
       with:
         token: ${{ secrets.PAT_TOKEN }}
         fetch-depth: 0
+        ref: main
+    
+    - name: Pull latest changes
+      run: |
+        git pull origin main
     
     - name: Bump chart version
       id: bump
@@ -313,7 +323,7 @@ jobs:
   # Nhánh 3: Consumer Chart
   update-chart-consumer:
     name: Update Consumer Chart
-    needs: [detect-changes, build-consumer]
+    needs: [detect-changes, build-consumer, update-chart-publisher]
     if: |
       always() &&
       (needs.detect-changes.outputs.consumer_changed == 'true' || 
@@ -332,6 +342,11 @@ jobs:
       with:
         token: ${{ secrets.PAT_TOKEN }}
         fetch-depth: 0
+        ref: main
+    
+    - name: Pull latest changes
+      run: |
+        git pull origin main
     
     - name: Bump chart version
       id: bump
@@ -378,7 +393,7 @@ jobs:
   # Nhánh 4: Notification Chart
   update-chart-notification:
     name: Update Notification Chart
-    needs: [detect-changes, build-notification]
+    needs: [detect-changes, build-notification, update-chart-consumer]
     if: |
       always() &&
       (needs.detect-changes.outputs.notification_changed == 'true' || 
@@ -397,6 +412,11 @@ jobs:
       with:
         token: ${{ secrets.PAT_TOKEN }}
         fetch-depth: 0
+        ref: main
+    
+    - name: Pull latest changes
+      run: |
+        git pull origin main
     
     - name: Bump chart version
       id: bump
@@ -443,11 +463,12 @@ jobs:
   # Nhánh 5: Postdeploy Chart
   update-chart-postdeploy:
     name: Update Postdeploy Chart
-    needs: [detect-changes]
+    needs: [detect-changes, update-chart-notification]
     if: |
-      needs.detect-changes.outputs.helm_postdeploy_changed == 'true' ||
-      needs.detect-changes.outputs.argocd_changed == 'true' ||
-      github.event.inputs.force_rebuild == 'true'
+      always() &&
+      (needs.detect-changes.outputs.helm_postdeploy_changed == 'true' ||
+       needs.detect-changes.outputs.argocd_changed == 'true' ||
+       github.event.inputs.force_rebuild == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -460,6 +481,11 @@ jobs:
       with:
         token: ${{ secrets.PAT_TOKEN }}
         fetch-depth: 0
+        ref: main
+    
+    - name: Pull latest changes
+      run: |
+        git pull origin main
     
     - name: Bump chart version
       id: bump
@@ -496,7 +522,105 @@ jobs:
         git push origin HEAD:main
 
   # ============================================================================
-  # STAGE 4: CREATE ALL GIT TAGS (1 JOB DUY NHẤT)
+  # STAGE 4: PACKAGE AND PUBLISH HELM CHARTS TO GH-PAGES
+  # ============================================================================
+  package-and-publish-charts:
+    name: Package & Publish Charts
+    needs:
+      - detect-changes
+      - update-chart-infra
+      - update-chart-publisher
+      - update-chart-consumer
+      - update-chart-notification
+      - update-chart-postdeploy
+    if: |
+      always() &&
+      (needs.update-chart-infra.result == 'success' ||
+       needs.update-chart-publisher.result == 'success' ||
+       needs.update-chart-consumer.result == 'success' ||
+       needs.update-chart-notification.result == 'success' ||
+       needs.update-chart-postdeploy.result == 'success')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout main branch
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.PAT_TOKEN }}
+        fetch-depth: 0
+        ref: main
+    
+    - name: Pull latest changes
+      run: |
+        git pull origin main
+    
+    - name: Install Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: 'latest'
+    
+    - name: Checkout gh-pages branch
+      run: |
+        git fetch origin gh-pages:gh-pages || git checkout --orphan gh-pages
+        git checkout gh-pages
+        
+        # Create charts directory if not exists
+        mkdir -p charts
+    
+    - name: Package Helm charts
+      run: |
+        # Checkout main to get latest chart files
+        git checkout main -- helm/
+        
+        # Package each chart
+        if [ "${{ needs.update-chart-infra.result }}" == "success" ]; then
+          echo "📦 Packaging testops-infra..."
+          helm package helm/testops-infra -d charts/
+        fi
+        
+        if [ "${{ needs.update-chart-publisher.result }}" == "success" ]; then
+          echo "📦 Packaging testops-publisher..."
+          helm package helm/testops-publisher -d charts/
+        fi
+        
+        if [ "${{ needs.update-chart-consumer.result }}" == "success" ]; then
+          echo "📦 Packaging testops-consumer..."
+          helm package helm/testops-consumer -d charts/
+        fi
+        
+        if [ "${{ needs.update-chart-notification.result }}" == "success" ]; then
+          echo "📦 Packaging testops-notification..."
+          helm package helm/testops-notification -d charts/
+        fi
+        
+        if [ "${{ needs.update-chart-postdeploy.result }}" == "success" ]; then
+          echo "📦 Packaging testops-postdeploy..."
+          helm package helm/testops-postdeploy -d charts/
+        fi
+    
+    - name: Generate index
+      run: |
+        helm repo index charts/ --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/charts
+    
+    - name: Commit and push to gh-pages
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        
+        git add charts/
+        
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "chore: publish helm charts [skip ci]"
+          git push origin gh-pages
+          echo "✅ Charts published to gh-pages"
+        fi
+
+  # ============================================================================
+  # STAGE 5: CREATE ALL GIT TAGS
   # ============================================================================
   create-all-tags:
     name: Create All Git Tags
@@ -507,6 +631,7 @@ jobs:
       - update-chart-consumer
       - update-chart-notification
       - update-chart-postdeploy
+      - package-and-publish-charts
     if: |
       always() &&
       github.ref == 'refs/heads/main' &&
@@ -592,7 +717,7 @@ jobs:
         echo "✅ All tags pushed successfully"
 
   # ============================================================================
-  # STAGE 5: DEPLOYMENT SUMMARY
+  # STAGE 6: DEPLOYMENT SUMMARY
   # ============================================================================
   deployment-summary:
     name: Deployment Summary
@@ -606,6 +731,7 @@ jobs:
       - update-chart-consumer
       - update-chart-notification
       - update-chart-postdeploy
+      - package-and-publish-charts
       - create-all-tags
     if: always()
     runs-on: ubuntu-latest
@@ -620,6 +746,7 @@ jobs:
         echo "- **Build Version:** \`${{ needs.detect-changes.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
         echo "- **Git Commit:** \`${GITHUB_SHA::7}\`" >> $GITHUB_STEP_SUMMARY
         echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Helm Repository:** https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/charts" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
         echo "## 🔨 Build Status" >> $GITHUB_STEP_SUMMARY
@@ -706,6 +833,21 @@ jobs:
         
         echo "" >> $GITHUB_STEP_SUMMARY
         
+        echo "## 📦 Helm Repository" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ needs.package-and-publish-charts.result }}" == "success" ]; then
+          echo "- **Status:** ✅ Charts published successfully" >> $GITHUB_STEP_SUMMARY
+          echo "- **Add Repository:**" >> $GITHUB_STEP_SUMMARY
+          echo '  ```bash' >> $GITHUB_STEP_SUMMARY
+          echo "  helm repo add testops https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/charts" >> $GITHUB_STEP_SUMMARY
+          echo "  helm repo update" >> $GITHUB_STEP_SUMMARY
+          echo '  ```' >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.package-and-publish-charts.result }}" == "failure" ]; then
+          echo "- **Status:** ❌ Chart publishing failed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- **Status:** ⏭️ No charts to publish" >> $GITHUB_STEP_SUMMARY
+        fi
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
         echo "## 🏷️ Git Tags" >> $GITHUB_STEP_SUMMARY
         if [ "${{ needs.create-all-tags.result }}" == "success" ]; then
           echo "- **Status:** ✅ All tags created successfully" >> $GITHUB_STEP_SUMMARY
@@ -725,6 +867,7 @@ jobs:
            [ "${{ needs.update-chart-consumer.result }}" == "failure" ] || \
            [ "${{ needs.update-chart-notification.result }}" == "failure" ] || \
            [ "${{ needs.update-chart-postdeploy.result }}" == "failure" ] || \
+           [ "${{ needs.package-and-publish-charts.result }}" == "failure" ] || \
            [ "${{ needs.create-all-tags.result }}" == "failure" ]; then
           echo "## ⚠️ Pipeline Failed" >> $GITHUB_STEP_SUMMARY
           echo "Please check the failed jobs above for details." >> $GITHUB_STEP_SUMMARY
