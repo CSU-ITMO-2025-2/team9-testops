@@ -49,16 +49,12 @@ spec:
         - name: PUBLISHER_URL
           value: {{ .Values.consumer.env.PUBLISHER_URL | quote }}
         ports:
+        - name: http
+          containerPort: {{ .Values.consumer.service.port }}
+          protocol: TCP
         - name: metrics
           containerPort: {{ .Values.consumer.service.metricsPort }}
           protocol: TCP
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: {{ .Values.consumer.probes.readinessProbe.httpGet.port }}
-          initialDelaySeconds: 5
-          periodSeconds: 5
-          failureThreshold: 3
         resources:
           {{- toYaml .Values.consumer.resources | nindent 10 }}
         {{- if .Values.consumer.probes.enabled }}
