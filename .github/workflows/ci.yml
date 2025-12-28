@@ -208,36 +208,6 @@ jobs:
           token: ${{ secrets.PAT_TOKEN }}
           fetch-depth: 0
       # ...existing logic for Helm, chart-releaser, and GitHub Release...
-
-    - name: Bump Helm chart versions
-      id: chart_version
-      run: |
-        echo "Checking for chart changes..."
-        
-        # Initialize flags
-        if [ "${{ github.event.inputs.force_rebuild }}" == "true" ]; then
-          echo "Force rebuild enabled - bumping all components"
-          BUMP_INFRA=true
-          BUMP_PUBLISHER=true
-          BUMP_CONSUMER=true
-          BUMP_NOTIFICATION=true
-          BUMP_POSTDEPLOY=true
-        else
-          BUMP_INFRA=false
-          BUMP_PUBLISHER=false
-          BUMP_CONSUMER=false
-          BUMP_NOTIFICATION=false
-          BUMP_POSTDEPLOY=false
-          
-          # Bump publisher if Django code or Dockerfile changes
-          if [ "${{ steps.changes.outputs.django }}" == "true" ]; then
-            BUMP_PUBLISHER=true
-          fi
-          
-          # Bump consumer if consumer code changes
-          if [ "${{ steps.changes.outputs.consumer }}" == "true" ]; then
-            BUMP_CONSUMER=true
-          fi
           
           # Bump notification if notification code changes
           if [ "${{ steps.changes.outputs.notification }}" == "true" ]; then
