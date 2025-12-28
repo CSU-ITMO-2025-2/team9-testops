@@ -17,67 +17,197 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-and-push:
+  changes:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
-    
+    outputs:
+      django: ${{ steps.changes.outputs.django }}
+      consumer: ${{ steps.changes.outputs.consumer }}
+      notification: ${{ steps.changes.outputs.notification }}
+      helm_infra: ${{ steps.changes.outputs.helm_infra }}
+      helm_publisher: ${{ steps.changes.outputs.helm_publisher }}
+      helm_consumer: ${{ steps.changes.outputs.helm_consumer }}
+      helm_notification: ${{ steps.changes.outputs.helm_notification }}
+      helm_postdeploy: ${{ steps.changes.outputs.helm_postdeploy }}
+      argocd: ${{ steps.changes.outputs.argocd }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      with:
-        token: ${{ secrets.PAT_TOKEN }}
-        fetch-depth: 0
-      
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-    
-    - name: Generate version tag
-      id: version
-      run: |
-        VERSION=${GITHUB_SHA::7}
-        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-        echo "Generated version: $VERSION"
-    
-    - name: Check for changes
-      uses: dorny/paths-filter@v2
-      id: changes
-      with:
-        filters: |
-          django:
-            - 'canvas/**'
-            - 'api_tests/**'
-            - 'home/**'
-            - 'templates/**'
-            - 'static/**'
-            - 'Dockerfile'
-            - 'requirements.txt'
-            - 'manage.py'
-          consumer:
-            - 'test-execute-consumer/**'
-            - 'watch.py'
-            - 'requirements.txt'
-          notification:
-            - 'notification-service/**'
-          helm_infra:
-            - 'helm/testops-infra/**'
-          helm_publisher:
-            - 'helm/testops-publisher/**'
-          helm_consumer:
-            - 'helm/testops-consumer/**'
-          helm_notification:
-            - 'helm/testops-notification/**'
-          helm_postdeploy:
-            - 'helm/testops-postdeploy/**'
-          argocd:
-            - 'argocd/**'
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0
+      - name: Check for changes
+        id: changes
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            django:
+              - 'canvas/**'
+              - 'api_tests/**'
+              - 'home/**'
+              - 'templates/**'
+              - 'static/**'
+              - 'Dockerfile'
+              - 'requirements.txt'
+              - 'manage.py'
+            consumer:
+              - 'test-execute-consumer/**'
+              - 'watch.py'
+              - 'requirements.txt'
+            notification:
+              - 'notification-service/**'
+            helm_infra:
+              - 'helm/testops-infra/**'
+            helm_publisher:
+              - 'helm/testops-publisher/**'
+            helm_consumer:
+              - 'helm/testops-consumer/**'
+            helm_notification:
+              - 'helm/testops-notification/**'
+            helm_postdeploy:
+              - 'helm/testops-postdeploy/**'
+            argocd:
+              - 'argocd/**'
+
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      VERSION: ${{ steps.version.outputs.VERSION }}
+    steps:
+      - name: Generate version tag
+        id: version
+        run: |
+          VERSION=${GITHUB_SHA::7}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Generated version: $VERSION"
+
+  build-django:
+    runs-on: ubuntu-latest
+    needs: [changes, version]
+    if: needs.changes.outputs.django == 'true' || github.event.inputs.force_rebuild == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build and push Django app image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/ai-testops:${{ needs.version.outputs.VERSION }}
+            ${{ secrets.DOCKER_USERNAME }}/ai-testops:latest
+          platforms: linux/amd64,linux/arm64
+
+  build-consumer:
+    runs-on: ubuntu-latest
+    needs: [changes, version]
+    if: needs.changes.outputs.consumer == 'true' || github.event.inputs.force_rebuild == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build and push Consumer image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./test-execute-consumer/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/ai-testops-consumer:${{ needs.version.outputs.VERSION }}
+            ${{ secrets.DOCKER_USERNAME }}/ai-testops-consumer:latest
+          platforms: linux/amd64,linux/arm64
+
+  build-notification:
+    runs-on: ubuntu-latest
+    needs: [changes, version]
+    if: needs.changes.outputs.notification == 'true' || github.event.inputs.force_rebuild == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build and push Notification service image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./notification-service
+          file: ./notification-service/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/ai-testops-notification:${{ needs.version.outputs.VERSION }}
+            ${{ secrets.DOCKER_USERNAME }}/ai-testops-notification:latest
+          platforms: linux/amd64,linux/arm64
+
+  bump-helm-charts:
+    runs-on: ubuntu-latest
+    needs: [changes, version]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0
+      # ...existing logic for bumping helm chart versions...
+      # (Copy the bump logic from the original job here)
+
+  update-image-tags:
+    runs-on: ubuntu-latest
+    needs: [bump-helm-charts, build-django, build-consumer, build-notification]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0
+      # ...existing logic for updating image tags in values.yaml...
+
+  commit-and-tag:
+    runs-on: ubuntu-latest
+    needs: [update-image-tags]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0
+      # ...existing logic for commit and push changes, create and push git tags...
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [commit-and-tag]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0
+      # ...existing logic for Helm, chart-releaser, and GitHub Release...
 
     - name: Bump Helm chart versions
       id: chart_version
