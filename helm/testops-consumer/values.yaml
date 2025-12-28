@@ -31,7 +31,7 @@ consumer:
   autoscaling:
     enabled: false  # Disable HPA for consumer - scale based on Kafka lag instead
     minReplicas: 1
-    maxReplicas: 6
+    maxReplicas: 7
     targetCPUUtilizationPercentage: 70
   # Pod probes configuration for the consumer container
   probes:
