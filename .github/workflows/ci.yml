@@ -231,7 +231,9 @@ jobs:
     
     - name: Commit changes
       run: |
-        git add helm/testops-infra/Chart.yaml helm/testops-infra/Chart.lock
+        git add helm/testops-infra/Chart.yaml 2>/dev/null || true
+        git add helm/testops-infra/Chart.lock 2>/dev/null || true
+        
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
@@ -293,7 +295,10 @@ jobs:
     
     - name: Commit changes
       run: |
-        git add helm/testops-publisher/Chart.yaml helm/testops-publisher/values.yaml helm/testops-publisher/Chart.lock
+        git add helm/testops-publisher/Chart.yaml 2>/dev/null || true
+        git add helm/testops-publisher/values.yaml 2>/dev/null || true
+        git add helm/testops-publisher/Chart.lock 2>/dev/null || true
+        
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
@@ -355,7 +360,10 @@ jobs:
     
     - name: Commit changes
       run: |
-        git add helm/testops-consumer/Chart.yaml helm/testops-consumer/values.yaml helm/testops-consumer/Chart.lock
+        git add helm/testops-consumer/Chart.yaml 2>/dev/null || true
+        git add helm/testops-consumer/values.yaml 2>/dev/null || true
+        git add helm/testops-consumer/Chart.lock 2>/dev/null || true
+        
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
@@ -417,7 +425,10 @@ jobs:
     
     - name: Commit changes
       run: |
-        git add helm/testops-notification/Chart.yaml helm/testops-notification/values.yaml helm/testops-notification/Chart.lock
+        git add helm/testops-notification/Chart.yaml 2>/dev/null || true
+        git add helm/testops-notification/values.yaml 2>/dev/null || true
+        git add helm/testops-notification/Chart.lock 2>/dev/null || true
+        
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
@@ -470,7 +481,9 @@ jobs:
     
     - name: Commit changes
       run: |
-        git add helm/testops-postdeploy/Chart.yaml helm/testops-postdeploy/Chart.lock
+        git add helm/testops-postdeploy/Chart.yaml 2>/dev/null || true
+        git add helm/testops-postdeploy/Chart.lock 2>/dev/null || true
+        
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
