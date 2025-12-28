@@ -232,7 +232,11 @@ jobs:
     - name: Commit changes
       run: |
         git add helm/testops-infra/Chart.yaml helm/testops-infra/Chart.lock
-        git commit -m "chore(infra): bump chart to ${{ steps.bump.outputs.CHART_VERSION }} [skip ci]" || echo "No changes to commit"
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "chore(infra): bump chart to ${{ steps.bump.outputs.CHART_VERSION }} [skip ci]"
+        fi
     
     - name: Push changes
       run: |
@@ -290,7 +294,11 @@ jobs:
     - name: Commit changes
       run: |
         git add helm/testops-publisher/Chart.yaml helm/testops-publisher/values.yaml helm/testops-publisher/Chart.lock
-        git commit -m "chore(publisher): bump chart to ${{ steps.bump.outputs.CHART_VERSION }} [skip ci]" || echo "No changes to commit"
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "chore(publisher): bump chart to ${{ steps.bump.outputs.CHART_VERSION }} [skip ci]"
+        fi
     
     - name: Push changes
       run: |
@@ -348,7 +356,11 @@ jobs:
     - name: Commit changes
       run: |
         git add helm/testops-consumer/Chart.yaml helm/testops-consumer/values.yaml helm/testops-consumer/Chart.lock
-        git commit -m "chore(consumer): bump chart to ${{ steps.bump.outputs.CHART_VERSION }} [skip ci]" || echo "No changes to commit"
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "chore(consumer): bump chart to ${{ steps.bump.outputs.CHART_VERSION }} [skip ci]"
+        fi
     
     - name: Push changes
       run: |
@@ -406,7 +418,11 @@ jobs:
     - name: Commit changes
       run: |
         git add helm/testops-notification/Chart.yaml helm/testops-notification/values.yaml helm/testops-notification/Chart.lock
-        git commit -m "chore(notification): bump chart to ${{ steps.bump.outputs.CHART_VERSION }} [skip ci]" || echo "No changes to commit"
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "chore(notification): bump chart to ${{ steps.bump.outputs.CHART_VERSION }} [skip ci]"
+        fi
     
     - name: Push changes
       run: |
@@ -455,7 +471,11 @@ jobs:
     - name: Commit changes
       run: |
         git add helm/testops-postdeploy/Chart.yaml helm/testops-postdeploy/Chart.lock
-        git commit -m "chore(postdeploy): bump chart to ${{ steps.bump.outputs.CHART_VERSION }} [skip ci]" || echo "No changes to commit"
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "chore(postdeploy): bump chart to ${{ steps.bump.outputs.CHART_VERSION }} [skip ci]"
+        fi
     
     - name: Push changes
       run: |
@@ -463,50 +483,25 @@ jobs:
         git push origin HEAD:main
 
   # ============================================================================
-  # STAGE 4: CREATE GIT TAGS (PARALLEL - MỖI CHART MỘT NHÁNH)
+  # STAGE 4: CREATE ALL GIT TAGS (1 JOB DUY NHẤT)
   # ============================================================================
-  
-  # Nhánh Tag 1: Main Release Tag
-  create-tag-release:
-    name: Create Release Tag
-    needs: [detect-changes]
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      with:
-        token: ${{ secrets.PAT_TOKEN }}
-        fetch-depth: 0
-        ref: main
-    
-    - name: Set git identity
-      run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-    
-    - name: Create release tag
-      run: |
-        TAG_NAME="testops-${{ needs.detect-changes.outputs.version }}"
-        if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
-          git tag -a "$TAG_NAME" -m "Release ${{ needs.detect-changes.outputs.version }}"
-          git push origin "$TAG_NAME"
-          echo "Created tag: $TAG_NAME"
-        else
-          echo "Tag $TAG_NAME already exists"
-        fi
-
-  # Nhánh Tag 2: Infra Chart Tag
-  create-tag-infra:
-    name: Create Infra Chart Tag
-    needs: [update-chart-infra]
+  create-all-tags:
+    name: Create All Git Tags
+    needs: 
+      - detect-changes
+      - update-chart-infra
+      - update-chart-publisher
+      - update-chart-consumer
+      - update-chart-notification
+      - update-chart-postdeploy
     if: |
       always() &&
-      needs.update-chart-infra.result == 'success' &&
-      github.ref == 'refs/heads/main'
+      github.ref == 'refs/heads/main' &&
+      (needs.update-chart-infra.result == 'success' ||
+       needs.update-chart-publisher.result == 'success' ||
+       needs.update-chart-consumer.result == 'success' ||
+       needs.update-chart-notification.result == 'success' ||
+       needs.update-chart-postdeploy.result == 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -519,165 +514,69 @@ jobs:
         fetch-depth: 0
         ref: main
     
-    - name: Set git identity
+    - name: Pull latest changes
       run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-    
-    - name: Create chart tag
-      run: |
-        TAG_NAME="testops-infra-${{ needs.update-chart-infra.outputs.chart_version }}"
-        if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
-          git tag -a "$TAG_NAME" -m "Release testops-infra ${{ needs.update-chart-infra.outputs.chart_version }}"
-          git push origin "$TAG_NAME"
-          echo "Created tag: $TAG_NAME"
-        else
-          echo "Tag $TAG_NAME already exists"
-        fi
-
-  # Nhánh Tag 3: Publisher Chart Tag
-  create-tag-publisher:
-    name: Create Publisher Chart Tag
-    needs: [update-chart-publisher]
-    if: |
-      always() &&
-      needs.update-chart-publisher.result == 'success' &&
-      github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      with:
-        token: ${{ secrets.PAT_TOKEN }}
-        fetch-depth: 0
-        ref: main
+        git pull origin main
     
     - name: Set git identity
       run: |
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
     
-    - name: Create chart tag
+    - name: Create all tags
       run: |
-        TAG_NAME="testops-publisher-${{ needs.update-chart-publisher.outputs.chart_version }}"
-        if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
-          git tag -a "$TAG_NAME" -m "Release testops-publisher ${{ needs.update-chart-publisher.outputs.chart_version }}"
-          git push origin "$TAG_NAME"
-          echo "Created tag: $TAG_NAME"
-        else
-          echo "Tag $TAG_NAME already exists"
+        # Function to create tag if it doesn't exist
+        create_tag_if_not_exists() {
+          local tag_name=$1
+          local tag_message=$2
+          
+          if git rev-parse "$tag_name" >/dev/null 2>&1; then
+            echo "⏭️  Tag $tag_name already exists"
+          else
+            git tag -a "$tag_name" -m "$tag_message"
+            echo "✅ Created tag: $tag_name"
+          fi
+        }
+        
+        # Main release tag
+        RELEASE_TAG="testops-${{ needs.detect-changes.outputs.version }}"
+        create_tag_if_not_exists "$RELEASE_TAG" "Release ${{ needs.detect-changes.outputs.version }}"
+        
+        # Infra chart tag
+        if [ "${{ needs.update-chart-infra.result }}" == "success" ]; then
+          INFRA_TAG="testops-infra-${{ needs.update-chart-infra.outputs.chart_version }}"
+          create_tag_if_not_exists "$INFRA_TAG" "Release testops-infra ${{ needs.update-chart-infra.outputs.chart_version }}"
         fi
-
-  # Nhánh Tag 4: Consumer Chart Tag
-  create-tag-consumer:
-    name: Create Consumer Chart Tag
-    needs: [update-chart-consumer]
-    if: |
-      always() &&
-      needs.update-chart-consumer.result == 'success' &&
-      github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      with:
-        token: ${{ secrets.PAT_TOKEN }}
-        fetch-depth: 0
-        ref: main
-    
-    - name: Set git identity
-      run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-    
-    - name: Create chart tag
-      run: |
-        TAG_NAME="testops-consumer-${{ needs.update-chart-consumer.outputs.chart_version }}"
-        if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
-          git tag -a "$TAG_NAME" -m "Release testops-consumer ${{ needs.update-chart-consumer.outputs.chart_version }}"
-          git push origin "$TAG_NAME"
-          echo "Created tag: $TAG_NAME"
-        else
-          echo "Tag $TAG_NAME already exists"
+        
+        # Publisher chart tag
+        if [ "${{ needs.update-chart-publisher.result }}" == "success" ]; then
+          PUBLISHER_TAG="testops-publisher-${{ needs.update-chart-publisher.outputs.chart_version }}"
+          create_tag_if_not_exists "$PUBLISHER_TAG" "Release testops-publisher ${{ needs.update-chart-publisher.outputs.chart_version }}"
         fi
-
-  # Nhánh Tag 5: Notification Chart Tag
-  create-tag-notification:
-    name: Create Notification Chart Tag
-    needs: [update-chart-notification]
-    if: |
-      always() &&
-      needs.update-chart-notification.result == 'success' &&
-      github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      with:
-        token: ${{ secrets.PAT_TOKEN }}
-        fetch-depth: 0
-        ref: main
-    
-    - name: Set git identity
-      run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-    
-    - name: Create chart tag
-      run: |
-        TAG_NAME="testops-notification-${{ needs.update-chart-notification.outputs.chart_version }}"
-        if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
-          git tag -a "$TAG_NAME" -m "Release testops-notification ${{ needs.update-chart-notification.outputs.chart_version }}"
-          git push origin "$TAG_NAME"
-          echo "Created tag: $TAG_NAME"
-        else
-          echo "Tag $TAG_NAME already exists"
+        
+        # Consumer chart tag
+        if [ "${{ needs.update-chart-consumer.result }}" == "success" ]; then
+          CONSUMER_TAG="testops-consumer-${{ needs.update-chart-consumer.outputs.chart_version }}"
+          create_tag_if_not_exists "$CONSUMER_TAG" "Release testops-consumer ${{ needs.update-chart-consumer.outputs.chart_version }}"
         fi
-
-  # Nhánh Tag 6: Postdeploy Chart Tag
-  create-tag-postdeploy:
-    name: Create Postdeploy Chart Tag
-    needs: [update-chart-postdeploy]
-    if: |
-      always() &&
-      needs.update-chart-postdeploy.result == 'success' &&
-      github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      with:
-        token: ${{ secrets.PAT_TOKEN }}
-        fetch-depth: 0
-        ref: main
-    
-    - name: Set git identity
-      run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-    
-    - name: Create chart tag
-      run: |
-        TAG_NAME="testops-postdeploy-${{ needs.update-chart-postdeploy.outputs.chart_version }}"
-        if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
-          git tag -a "$TAG_NAME" -m "Release testops-postdeploy ${{ needs.update-chart-postdeploy.outputs.chart_version }}"
-          git push origin "$TAG_NAME"
-          echo "Created tag: $TAG_NAME"
-        else
-          echo "Tag $TAG_NAME already exists"
+        
+        # Notification chart tag
+        if [ "${{ needs.update-chart-notification.result }}" == "success" ]; then
+          NOTIFICATION_TAG="testops-notification-${{ needs.update-chart-notification.outputs.chart_version }}"
+          create_tag_if_not_exists "$NOTIFICATION_TAG" "Release testops-notification ${{ needs.update-chart-notification.outputs.chart_version }}"
         fi
+        
+        # Postdeploy chart tag
+        if [ "${{ needs.update-chart-postdeploy.result }}" == "success" ]; then
+          POSTDEPLOY_TAG="testops-postdeploy-${{ needs.update-chart-postdeploy.outputs.chart_version }}"
+          create_tag_if_not_exists "$POSTDEPLOY_TAG" "Release testops-postdeploy ${{ needs.update-chart-postdeploy.outputs.chart_version }}"
+        fi
+    
+    - name: Push all tags at once
+      run: |
+        echo "Pushing all tags to remote..."
+        git push origin --tags
+        echo "✅ All tags pushed successfully"
 
   # ============================================================================
   # STAGE 5: DEPLOYMENT SUMMARY
@@ -694,12 +593,7 @@ jobs:
       - update-chart-consumer
       - update-chart-notification
       - update-chart-postdeploy
-      - create-tag-release
-      - create-tag-infra
-      - create-tag-publisher
-      - create-tag-consumer
-      - create-tag-notification
-      - create-tag-postdeploy
+      - create-all-tags
     if: always()
     runs-on: ubuntu-latest
     
@@ -711,32 +605,117 @@ jobs:
         
         echo "## 📦 Version Information" >> $GITHUB_STEP_SUMMARY
         echo "- **Build Version:** \`${{ needs.detect-changes.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Git Commit:** \`${GITHUB_SHA::7}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
         echo "## 🔨 Build Status" >> $GITHUB_STEP_SUMMARY
         echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
         echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
-        echo "| Django Image | ${{ needs.build-django.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Consumer Image | ${{ needs.build-consumer.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Notification Image | ${{ needs.build-notification.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        
+        # Django
+        if [ "${{ needs.build-django.result }}" == "success" ]; then
+          echo "| Django Image | ✅ success |" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.build-django.result }}" == "failure" ]; then
+          echo "| Django Image | ❌ failure |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Django Image | ⏭️ skipped |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Consumer
+        if [ "${{ needs.build-consumer.result }}" == "success" ]; then
+          echo "| Consumer Image | ✅ success |" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.build-consumer.result }}" == "failure" ]; then
+          echo "| Consumer Image | ❌ failure |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Consumer Image | ⏭️ skipped |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Notification
+        if [ "${{ needs.build-notification.result }}" == "success" ]; then
+          echo "| Notification Image | ✅ success |" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.build-notification.result }}" == "failure" ]; then
+          echo "| Notification Image | ❌ failure |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Notification Image | ⏭️ skipped |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
         echo "" >> $GITHUB_STEP_SUMMARY
         
         echo "## 📊 Helm Chart Updates" >> $GITHUB_STEP_SUMMARY
         echo "| Chart | Version | Status |" >> $GITHUB_STEP_SUMMARY
         echo "|-------|---------|--------|" >> $GITHUB_STEP_SUMMARY
-        echo "| Infra | \`${{ needs.update-chart-infra.outputs.chart_version || 'unchanged' }}\` | ${{ needs.update-chart-infra.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Publisher | \`${{ needs.update-chart-publisher.outputs.chart_version || 'unchanged' }}\` | ${{ needs.update-chart-publisher.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Consumer | \`${{ needs.update-chart-consumer.outputs.chart_version || 'unchanged' }}\` | ${{ needs.update-chart-consumer.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Notification | \`${{ needs.update-chart-notification.outputs.chart_version || 'unchanged' }}\` | ${{ needs.update-chart-notification.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Postdeploy | \`${{ needs.update-chart-postdeploy.outputs.chart_version || 'unchanged' }}\` | ${{ needs.update-chart-postdeploy.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        
+        # Infra
+        if [ "${{ needs.update-chart-infra.result }}" == "success" ]; then
+          echo "| Infra | \`${{ needs.update-chart-infra.outputs.chart_version }}\` | ✅ success |" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.update-chart-infra.result }}" == "failure" ]; then
+          echo "| Infra | - | ❌ failure |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Infra | unchanged | ⏭️ skipped |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Publisher
+        if [ "${{ needs.update-chart-publisher.result }}" == "success" ]; then
+          echo "| Publisher | \`${{ needs.update-chart-publisher.outputs.chart_version }}\` | ✅ success |" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.update-chart-publisher.result }}" == "failure" ]; then
+          echo "| Publisher | - | ❌ failure |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Publisher | unchanged | ⏭️ skipped |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Consumer
+        if [ "${{ needs.update-chart-consumer.result }}" == "success" ]; then
+          echo "| Consumer | \`${{ needs.update-chart-consumer.outputs.chart_version }}\` | ✅ success |" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.update-chart-consumer.result }}" == "failure" ]; then
+          echo "| Consumer | - | ❌ failure |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Consumer | unchanged | ⏭️ skipped |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Notification
+        if [ "${{ needs.update-chart-notification.result }}" == "success" ]; then
+          echo "| Notification | \`${{ needs.update-chart-notification.outputs.chart_version }}\` | ✅ success |" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.update-chart-notification.result }}" == "failure" ]; then
+          echo "| Notification | - | ❌ failure |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Notification | unchanged | ⏭️ skipped |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Postdeploy
+        if [ "${{ needs.update-chart-postdeploy.result }}" == "success" ]; then
+          echo "| Postdeploy | \`${{ needs.update-chart-postdeploy.outputs.chart_version }}\` | ✅ success |" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.update-chart-postdeploy.result }}" == "failure" ]; then
+          echo "| Postdeploy | - | ❌ failure |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Postdeploy | unchanged | ⏭️ skipped |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
         echo "" >> $GITHUB_STEP_SUMMARY
         
         echo "## 🏷️ Git Tags" >> $GITHUB_STEP_SUMMARY
-        echo "| Tag Type | Status |" >> $GITHUB_STEP_SUMMARY
-        echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
-        echo "| Release | ${{ needs.create-tag-release.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Infra Chart | ${{ needs.create-tag-infra.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Publisher Chart | ${{ needs.create-tag-publisher.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Consumer Chart | ${{ needs.create-tag-consumer.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Notification Chart | ${{ needs.create-tag-notification.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Postdeploy Chart | ${{ needs.create-tag-postdeploy.result || '⏭️ skipped' }} |" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ needs.create-all-tags.result }}" == "success" ]; then
+          echo "- **Status:** ✅ All tags created successfully" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.create-all-tags.result }}" == "failure" ]; then
+          echo "- **Status:** ❌ Tag creation failed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- **Status:** ⏭️ Skipped" >> $GITHUB_STEP_SUMMARY
+        fi
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Check for any failures
+        if [ "${{ needs.build-django.result }}" == "failure" ] || \
+           [ "${{ needs.build-consumer.result }}" == "failure" ] || \
+           [ "${{ needs.build-notification.result }}" == "failure" ] || \
+           [ "${{ needs.update-chart-infra.result }}" == "failure" ] || \
+           [ "${{ needs.update-chart-publisher.result }}" == "failure" ] || \
+           [ "${{ needs.update-chart-consumer.result }}" == "failure" ] || \
+           [ "${{ needs.update-chart-notification.result }}" == "failure" ] || \
+           [ "${{ needs.update-chart-postdeploy.result }}" == "failure" ] || \
+           [ "${{ needs.create-all-tags.result }}" == "failure" ]; then
+          echo "## ⚠️ Pipeline Failed" >> $GITHUB_STEP_SUMMARY
+          echo "Please check the failed jobs above for details." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "## ✅ Pipeline Completed Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "All jobs completed without errors." >> $GITHUB_STEP_SUMMARY
+        fi
