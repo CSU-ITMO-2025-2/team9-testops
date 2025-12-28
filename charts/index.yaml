@@ -2,8 +2,21 @@ apiVersion: v1
 entries:
   team9-consumer:
   - apiVersion: v2
+    appVersion: a684401
+    created: "2025-12-28T17:27:18.22161557Z"
+    description: Consumer service for TestOps platform
+    digest: 0b36d2e882a5d0ea076c82a31f28e8d6b63f0499815ad83f0624765f7a2a8746
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-consumer
+    type: application
+    urls:
+    - https://CSU-ITMO-2025-2.github.io/team9-testops/charts/team9-consumer-1.1.39.tgz
+    version: 1.1.39
+  - apiVersion: v2
     appVersion: 378a5dc
-    created: "2025-12-28T17:13:11.091460491Z"
+    created: "2025-12-28T17:27:18.221257603Z"
     description: Consumer service for TestOps platform
     digest: 6cd9c13a0b1afd71d893b56361990c1e0e09a042f981f67c71c6224bbc41cebe
     maintainers:
@@ -16,7 +29,7 @@ entries:
     version: 1.1.38
   - apiVersion: v2
     appVersion: e1c4e8b
-    created: "2025-12-28T17:13:11.091084491Z"
+    created: "2025-12-28T17:27:18.220896349Z"
     description: Consumer service for TestOps platform
     digest: 3b385e1199d5fccda07579dd1cbda75e905cc2cacafafc993759b3ad47a27270
     maintainers:
@@ -29,7 +42,7 @@ entries:
     version: 1.1.37
   - apiVersion: v2
     appVersion: c5fd0fc
-    created: "2025-12-28T17:13:11.090710704Z"
+    created: "2025-12-28T17:27:18.22049984Z"
     description: Consumer service for TestOps platform
     digest: 57a5833419fe354538d74e64dd54f9fbb2b08cccf630fb441f94bb8e75dbae67
     maintainers:
@@ -40,4 +53,4 @@ entries:
     urls:
     - https://CSU-ITMO-2025-2.github.io/team9-testops/charts/team9-consumer-1.1.36.tgz
     version: 1.1.36
-generated: "2025-12-28T17:13:11.090193871Z"
+generated: "2025-12-28T17:27:18.219950677Z"
