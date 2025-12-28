@@ -1,0 +1,81 @@
+# Default values for team9-notification
+
+namespace: team9-ns
+
+image:
+  repository: vanlahuynhduc/ai-testops-notification
+  tag: "c45a8b3"
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8002
+  metricsPort: 8002
+
+# Pod probes configuration. Set `enabled: false` to disable a probe.
+probes:
+  enabled: true
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 8002
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+
+  # Readiness probe: checks the container is ready to receive traffic. Default: HTTP GET /ready
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /ready
+      port: 8002
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+
+  # Optional startup probe for slower applications
+  startupProbe:
+    enabled: false
+    httpGet:
+      path: /health
+      port: 8002
+    failureThreshold: 30
+    periodSeconds: 10
+
+env:
+  KAFKA_BOOTSTRAP_SERVERS: "kafka.team9-ns.svc.cluster.local:9092"
+
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "50m"
+  limits:
+    memory: "128Mi"
+    cpu: "100m"
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  hosts:
+    - host: team9.kubepractice.ru
+      paths:
+        - path: /notifications(/|$)(.*)
+          pathType: Prefix
+  tls:
+    - hosts:
+        - team9.kubepractice.ru
+      secretName: tls-secret
+  

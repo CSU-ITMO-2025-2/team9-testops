@@ -10,8 +10,8 @@ metadata:
     argocd.argoproj.io/sync-wave: "4"
 spec:
   scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
+    apiVersion: argoproj.io/v1alpha1
+    kind: Rollout
     name: {{ .Values.djangoApp.name }}
   minReplicas: {{ .Values.djangoApp.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.djangoApp.autoscaling.maxReplicas }}

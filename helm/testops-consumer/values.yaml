@@ -13,25 +13,56 @@ consumer:
   replicaCount: 1
   image:
     repository: vanlahuynhduc/ai-testops-consumer
-    tag: "187316a"
+    tag: "c45a8b3"
   service:
     type: ClusterIP
-    port: 8080
+    port: 8082
+    metricsPort: 8001
   env:
-    PUBLISHER_URL: "http://testops-publisher:8000"
-    KAFKA_BOOTSTRAP_SERVERS: "kafka.testops.svc.cluster.local:9092"
+    PUBLISHER_URL: "http://team9-publisher:8000"
+    KAFKA_BOOTSTRAP_SERVERS: "kafka.team9-ns.svc.cluster.local:9092"
   resources:
     requests:
       memory: "128Mi"
       cpu: "100m"
     limits:
       memory: "256Mi"
-      cpu: "200m"
+      cpu: "100m"
   autoscaling:
     enabled: false  # Disable HPA for consumer - scale based on Kafka lag instead
-    minReplicas: 2
-    maxReplicas: 8
+    minReplicas: 1
+    maxReplicas: 7
     targetCPUUtilizationPercentage: 70
+  # Pod probes configuration for the consumer container
+  probes:
+    enabled: true
+    livenessProbe:
+      enabled: true
+      httpGet:
+        path: /health
+        port: 8082
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+      successThreshold: 1
+    readinessProbe:
+      enabled: true
+      httpGet:
+        path: /ready
+        port: 8082
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+      successThreshold: 1
+    startupProbe:
+      enabled: false
+      httpGet:
+        path: /health
+        port: 8082
+      failureThreshold: 30
+      periodSeconds: 10
 
 # Kafka connection (external to this chart)
 kafka:
@@ -46,7 +77,7 @@ keda:
   cooldownPeriod: 300
   consumer:
     minReplicas: 1
-    maxReplicas: 10
+    maxReplicas: 5
     consumerGroup: "test_group"
     topic: "test_run_queue"
     lagThreshold: "5"

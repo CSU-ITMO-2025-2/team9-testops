@@ -1,0 +1,20 @@
+{{- if .Values.djangoApp.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.djangoApp.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.djangoApp.name }}
+    {{- include "ai-testops.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  type: {{ .Values.djangoApp.service.type }}
+  ports:
+  - port: {{ .Values.djangoApp.service.port }}
+    targetPort: {{ .Values.djangoApp.service.port }}
+    name: http
+  selector:
+    app: {{ .Values.djangoApp.name }}
+{{- end }}

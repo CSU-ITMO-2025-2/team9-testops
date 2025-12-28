@@ -8,21 +8,16 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 data:
-  POSTGRES_DB: {{ .Values.global.postgres.config.database | quote }}
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: app-config
-  namespace: {{ .Values.global.namespace }}
-  labels:
-    {{- include "ai-testops.labels" . | nindent 4 }}
-data:
-  POSTGRES_HOST: "{{ .Values.global.postgres.name }}.{{ .Values.global.namespace }}.svc.cluster.local"
-  POSTGRES_PORT: {{ .Values.global.postgres.service.port | quote }}
+  POSTGRES_DB: {{ .Values.global.postgres.external.database | quote }}
+  POSTGRES_HOST: {{ .Values.global.postgres.external.host | quote }}
+  POSTGRES_PORT: {{ .Values.global.postgres.external.port | quote }}
+  {{- if .Values.global.strimzi.kafka.enabled }}
+  KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.global.strimzi.kafka.name }}-kafka-bootstrap.{{ .Values.global.namespace }}.svc:9092"
+  {{- else }}
   KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.global.kafka.name }}.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.global.kafka.service.port }}"
+  {{- end }}
   KAFKA_TOPIC: "test_run_queue"
-  SECRET_KEY: {{ .Values.global.django.secretKey | quote }}
+  # SECRET_KEY moved to django-secret (from Vault)
   ALLOWED_HOSTS: "{{ (index .Values.global.ingress.hosts 0).host }},localhost,127.0.0.1"
   CSRF_TRUSTED_ORIGINS: "https://{{ (index .Values.global.ingress.hosts 0).host }}"
   SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI: "https://{{ (index .Values.global.ingress.hosts 0).host }}/accounts/google/login/callback/"

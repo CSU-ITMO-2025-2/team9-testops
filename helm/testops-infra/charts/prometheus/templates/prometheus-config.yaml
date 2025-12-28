@@ -29,6 +29,12 @@ data:
       - job_name: 'consumer'
         static_configs:
           - targets: ['test-execute-consumer.{{ .Values.global.namespace }}.svc.cluster.local:8001']
+        metrics_path: '/'
+
+      # Scrape Notification service metrics
+      - job_name: 'notification-service'
+        static_configs:
+          - targets: ['team9-notification.{{ .Values.global.namespace }}.svc.cluster.local:8002']
         metrics_path: '/metrics'
 
       # Scrape PostgreSQL metrics (postgres_exporter)
@@ -43,35 +49,12 @@ data:
           - targets: ['kafka.{{ .Values.global.namespace }}.svc.cluster.local:9092']
         metrics_path: '/metrics'
 
-      # Kubernetes API server metrics
-      - job_name: 'kubernetes-apiservers'
-        kubernetes_sd_configs:
-          - role: endpoints
-        scheme: https
-        tls_config:
-          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        relabel_configs:
-          - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
-            action: keep
-            regex: default;kubernetes;https
-
-      # Kubernetes nodes metrics
-      - job_name: 'kubernetes-nodes'
-        kubernetes_sd_configs:
-          - role: node
-        scheme: https
-        tls_config:
-          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        relabel_configs:
-          - action: labelmap
-            regex: __meta_kubernetes_node_label_(.+)
-
       # Kubernetes pods metrics
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
           - role: pod
+            namespaces:
+              names: [{{ .Values.global.namespace | quote }}]
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
@@ -101,6 +84,6 @@ data:
           password_file: /etc/secrets/grafana-api-key
         write_relabel_configs:
           - source_labels: [__name__]
-            regex: '(test_cases_status|django_.*|http_.*|pg_.*|kafka_.*|node_.*|kube_.*)'
+            regex: '(test_cases_status|notifications_sent|django_.*|http_.*|pg_.*|kafka_.*|node_.*|kube_.*|container_.*|chaos_mesh_.*)'
             action: keep
 {{- end }}

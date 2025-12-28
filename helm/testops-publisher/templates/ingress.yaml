@@ -33,7 +33,7 @@ spec:
         pathType: {{ .pathType }}
         backend:
           service:
-            name: {{ .service }}
+            name: {{ default $.Values.djangoApp.name .service }}
             port:
               number: {{ .port }}
       {{- end }}
