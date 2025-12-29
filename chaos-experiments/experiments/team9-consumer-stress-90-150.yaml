@@ -1,0 +1,20 @@
+kind: StressChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: team9-ns
+  name: team9-consumer-stress-90-150
+spec:
+  selector:
+    namespaces:
+      - team9-ns
+    labelSelectors:
+      app: test-execute-consumer
+  mode: all
+  stressors:
+    memory:
+      workers: 5
+      size: '30'
+    cpu:
+      workers: 9
+      load: 10
+  duration: 1m
