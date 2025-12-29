@@ -3,7 +3,7 @@ entries:
   team9-consumer:
   - apiVersion: v2
     appVersion: 4f47cbf
-    created: "2025-12-28T19:07:43.793900614Z"
+    created: "2025-12-29T08:57:45.098655782Z"
     description: Consumer service for TestOps platform
     digest: 814b4ccc550f66d75df0723addb1d08967f3f5315dd7768d5d4881caafc33de0
     maintainers:
@@ -16,7 +16,7 @@ entries:
     version: 1.1.42
   - apiVersion: v2
     appVersion: 8ec9145
-    created: "2025-12-28T19:07:43.793539957Z"
+    created: "2025-12-29T08:57:45.098313321Z"
     description: Consumer service for TestOps platform
     digest: fdb29e1dddf51ec3229f44cd69a56ff056194cc1ff4b4d464742283a24f97188
     maintainers:
@@ -29,7 +29,7 @@ entries:
     version: 1.1.41
   - apiVersion: v2
     appVersion: f6df5e5
-    created: "2025-12-28T19:07:43.793172598Z"
+    created: "2025-12-29T08:57:45.097928072Z"
     description: Consumer service for TestOps platform
     digest: 865ed82c2340ad6ccccdee7c9181318603a8a5374fede11f29b26be19701dea6
     maintainers:
@@ -42,7 +42,7 @@ entries:
     version: 1.1.40
   - apiVersion: v2
     appVersion: a684401
-    created: "2025-12-28T19:07:43.792835356Z"
+    created: "2025-12-29T08:57:45.097591282Z"
     description: Consumer service for TestOps platform
     digest: 0b36d2e882a5d0ea076c82a31f28e8d6b63f0499815ad83f0624765f7a2a8746
     maintainers:
@@ -55,7 +55,7 @@ entries:
     version: 1.1.39
   - apiVersion: v2
     appVersion: 378a5dc
-    created: "2025-12-28T19:07:43.792468468Z"
+    created: "2025-12-29T08:57:45.097160006Z"
     description: Consumer service for TestOps platform
     digest: 6cd9c13a0b1afd71d893b56361990c1e0e09a042f981f67c71c6224bbc41cebe
     maintainers:
@@ -68,7 +68,7 @@ entries:
     version: 1.1.38
   - apiVersion: v2
     appVersion: e1c4e8b
-    created: "2025-12-28T19:07:43.79210696Z"
+    created: "2025-12-29T08:57:45.096760749Z"
     description: Consumer service for TestOps platform
     digest: 3b385e1199d5fccda07579dd1cbda75e905cc2cacafafc993759b3ad47a27270
     maintainers:
@@ -81,7 +81,7 @@ entries:
     version: 1.1.37
   - apiVersion: v2
     appVersion: c5fd0fc
-    created: "2025-12-28T19:07:43.791734281Z"
+    created: "2025-12-29T08:57:45.096365921Z"
     description: Consumer service for TestOps platform
     digest: 57a5833419fe354538d74e64dd54f9fbb2b08cccf630fb441f94bb8e75dbae67
     maintainers:
@@ -420,7 +420,7 @@ entries:
   team9-infra:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-12-28T19:07:43.795964194Z"
+    created: "2025-12-29T08:57:45.100399762Z"
     dependencies:
     - condition: postgres.enabled
       name: postgres
@@ -450,7 +450,7 @@ entries:
     version: 1.2.69
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-12-28T19:07:43.79464525Z"
+    created: "2025-12-29T08:57:45.099448253Z"
     dependencies:
     - condition: postgres.enabled
       name: postgres
@@ -1891,7 +1891,7 @@ entries:
   team9-notification:
   - apiVersion: v2
     appVersion: 4f47cbf
-    created: "2025-12-28T19:07:43.797055658Z"
+    created: "2025-12-29T08:57:45.101350049Z"
     description: Notification service for TestOps platform
     digest: 7337c740490e1e96e616d992fb0b68a51a71597e87d757a30c6988d5c4cdb01b
     maintainers:
@@ -1904,7 +1904,7 @@ entries:
     version: 0.1.13
   - apiVersion: v2
     appVersion: f6df5e5
-    created: "2025-12-28T19:07:43.796667841Z"
+    created: "2025-12-29T08:57:45.100855494Z"
     description: Notification service for TestOps platform
     digest: dd5afb1771cf9d913d22b708f29cfc779692a590c4a4c33ef11e2e525d8650b1
     maintainers:
@@ -2061,7 +2061,7 @@ entries:
   team9-postdeploy:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-12-28T19:07:43.797600931Z"
+    created: "2025-12-29T08:57:45.103082247Z"
     description: Post-deployment resources for TestOps (NetworkPolicies, Monitoring)
     digest: 6fe101edf3be326f0f3a120afbfa937dfb790cd60dde4f2d82e0aefb2f3b010e
     maintainers:
@@ -2074,7 +2074,7 @@ entries:
     version: 1.1.44
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-12-28T19:07:43.797318531Z"
+    created: "2025-12-29T08:57:45.10209974Z"
     description: Post-deployment resources for TestOps (NetworkPolicies, Monitoring)
     digest: 71f600d40672696788181dbd961262f191735a95072954a72a300617f1e236b7
     maintainers:
@@ -2456,8 +2456,32 @@ entries:
         kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.12.0/keda-2.12.0.yaml
       keda.sh/required: "true"
     apiVersion: v2
+    appVersion: c374e94
+    created: "2025-12-29T08:57:45.105226345Z"
+    description: Publisher service for TestOps platform
+    digest: 4df05e3b3d5cb5638cabbc282e4a01510db888a6e68e3537679b243b95d452d2
+    keywords:
+    - ai
+    - testing
+    - kafka
+    - microservices
+    - keda
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-publisher
+    type: application
+    urls:
+    - https://CSU-ITMO-2025-2.github.io/team9-testops/charts/team9-publisher-1.4.61.tgz
+    version: 1.4.61
+  - annotations:
+      keda.sh/installation: |
+        Install KEDA before deploying this chart:
+        kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.12.0/keda-2.12.0.yaml
+      keda.sh/required: "true"
+    apiVersion: v2
     appVersion: 656ab5c
-    created: "2025-12-28T19:07:43.798899706Z"
+    created: "2025-12-29T08:57:45.104728735Z"
     description: Publisher service for TestOps platform
     digest: ecf4a51aabb3a660fd17684443a6a04c3082a91ce307b81f85cc6581af5dfab8
     keywords:
@@ -2481,7 +2505,7 @@ entries:
       keda.sh/required: "true"
     apiVersion: v2
     appVersion: 4f47cbf
-    created: "2025-12-28T19:07:43.798467887Z"
+    created: "2025-12-29T08:57:45.104156335Z"
     description: Publisher service for TestOps platform
     digest: 73b9393780db607c7d2ea671be2a41f568730e3768a0a73bacc8368d06a6b7c9
     keywords:
@@ -2505,7 +2529,7 @@ entries:
       keda.sh/required: "true"
     apiVersion: v2
     appVersion: f6df5e5
-    created: "2025-12-28T19:07:43.798060653Z"
+    created: "2025-12-29T08:57:45.103591068Z"
     description: Publisher service for TestOps platform
     digest: 0dc3e0605263bfa4693c0fbf5dd8c922dc8c8bfeb078fbec5d31a33e2e09116a
     keywords:
@@ -3734,4 +3758,4 @@ entries:
     urls:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/testops-publisher-1.4.10/testops-publisher-1.4.10.tgz
     version: 1.4.10
-generated: "2025-12-28T19:07:43.791183428Z"
+generated: "2025-12-29T08:57:45.0957072Z"
