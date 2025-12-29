@@ -1,0 +1,96 @@
+{{- if .Values.global.kafka.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.global.kafka.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.global.kafka.name }}
+    {{- include "ai-testops.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.global.kafka.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.global.kafka.name }}
+    spec:
+      containers:
+      - name: kafka
+        image: "{{ .Values.global.kafka.image.repository }}:{{ .Values.global.kafka.image.tag }}"
+        imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+        env:
+        - name: KAFKA_BROKER_ID
+          value: "{{ .Values.global.kafka.config.brokerId }}"
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: KAFKA_LISTENERS
+          value: "PLAINTEXT://:{{ .Values.global.kafka.service.port }},CONTROLLER://:9093"
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: "PLAINTEXT://$(POD_IP):{{ .Values.global.kafka.service.port }}"
+        - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+          value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+        - name: KAFKA_INTER_BROKER_LISTENER_NAME
+          value: "PLAINTEXT"
+        - name: KAFKA_CONTROLLER_LISTENER_NAMES
+          value: "CONTROLLER"
+        - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+          value: "1@localhost:9093"
+        - name: KAFKA_PROCESS_ROLES
+          value: "broker,controller"
+        - name: KAFKA_NODE_ID
+          value: "1"
+        - name: CLUSTER_ID
+          value: "MkQkV1BjTUtrLWVTNQ"
+        - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+          value: "1"
+        - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+          value: "true"
+        - name: KAFKA_LOG_RETENTION_HOURS
+          value: "168"
+        ports:
+        - containerPort: {{ .Values.global.kafka.service.port }}
+          name: kafka
+        - containerPort: 9093
+          name: controller
+        resources:
+          {{- toYaml .Values.global.kafka.resources | nindent 10 }}
+        livenessProbe:
+          tcpSocket:
+            port: {{ .Values.global.kafka.service.port }}
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: {{ .Values.global.kafka.service.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.global.kafka.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.global.kafka.name }}
+    {{- include "ai-testops.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  type: {{ .Values.global.kafka.service.type }}
+  ports:
+  - port: {{ .Values.global.kafka.service.port }}
+    targetPort: {{ .Values.global.kafka.service.port }}
+    name: kafka
+  - port: 9093
+    targetPort: 9093
+    name: controller
+  selector:
+    app: {{ .Values.global.kafka.name }}
+{{- end }}

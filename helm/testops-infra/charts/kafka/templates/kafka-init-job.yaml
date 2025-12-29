@@ -1,0 +1,82 @@
+{{- if .Values.global.kafka.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-topic-init
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "ai-testops.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 5
+  template:
+    metadata:
+      labels:
+        app: kafka-topic-init
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+      - name: wait-for-kafka
+        image: busybox:1.28
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        command: 
+          - sh
+          - -c
+          - |
+            echo "Waiting for Kafka to be ready..."
+            until nc -z {{ .Values.global.kafka.name }}.team9-ns.svc.cluster.local {{ .Values.global.kafka.service.port }}; do
+              echo "Kafka not ready, sleeping..."
+              sleep 5
+            done
+            echo "Kafka is ready!"
+            sleep 10
+      containers:
+      - name: kafka-topic-creator
+        image: "{{ .Values.global.kafka.image.repository }}:{{ .Values.global.kafka.image.tag }}"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+        command:
+          - sh
+          - -c
+          - |
+            echo "Creating Kafka topic: test_run_queue"
+            /opt/kafka/bin/kafka-topics.sh --create \
+              --bootstrap-server {{ .Values.global.kafka.name }}.team9-ns.svc.cluster.local:{{ .Values.global.kafka.service.port }} \
+              --topic test_run_queue \
+              --partitions 3 \
+              --replication-factor 1 \
+              --if-not-exists || echo "Topic test_run_queue might already exist, continuing..."
+            
+            echo "Creating Kafka topic: notification_queue"
+            /opt/kafka/bin/kafka-topics.sh --create \
+              --bootstrap-server {{ .Values.global.kafka.name }}.team9-ns.svc.cluster.local:{{ .Values.global.kafka.service.port }} \
+              --topic notification_queue \
+              --partitions 3 \
+              --replication-factor 1 \
+              --if-not-exists || echo "Topic notification_queue might already exist, continuing..."
+
+            echo "Creating Kafka topic: dead_letter_queue"
+            /opt/kafka/bin/kafka-topics.sh --create \
+              --bootstrap-server {{ .Values.global.kafka.name }}.team9-ns.svc.cluster.local:{{ .Values.global.kafka.service.port }} \
+              --topic dead_letter_queue \
+              --partitions 3 \
+              --replication-factor 1 \
+              --if-not-exists || echo "Topic dead_letter_queue might already exist, continuing..."
+            
+            echo "Listing topics:"
+            /opt/kafka/bin/kafka-topics.sh --list \
+              --bootstrap-server {{ .Values.global.kafka.name }}.team9-ns.svc.cluster.local:{{ .Values.global.kafka.service.port }}
+{{- end }}

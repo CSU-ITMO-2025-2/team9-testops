@@ -1,0 +1,119 @@
+{{- if .Values.global.postgres.enabled }}
+{{- if .Values.global.postgres.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.global.postgres.name }}
+    {{- include "ai-testops.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.global.postgres.persistence.storageClass }}
+  storageClassName: {{ .Values.global.postgres.persistence.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.global.postgres.persistence.size }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.global.postgres.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.global.postgres.name }}
+    {{- include "ai-testops.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.global.postgres.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.global.postgres.name }}
+    spec:
+      containers:
+      - name: postgres
+        image: "{{ .Values.global.postgres.image.repository }}:{{ .Values.global.postgres.image.tag }}"
+        imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.global.postgres.service.port }}
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: postgres-config
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        resources:
+          {{- toYaml .Values.global.postgres.resources | nindent 10 }}
+        {{- if .Values.global.postgres.persistence.enabled }}
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        {{- end }}
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - {{ .Values.global.postgres.credentials.username }}
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 5
+          successThreshold: 1
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - {{ .Values.global.postgres.credentials.username }}
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+          successThreshold: 1
+      {{- if .Values.global.postgres.persistence.enabled }}
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.global.postgres.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.global.postgres.name }}
+    {{- include "ai-testops.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  type: {{ .Values.global.postgres.service.type }}
+  ports:
+  - port: {{ .Values.global.postgres.service.port }}
+    targetPort: {{ .Values.global.postgres.service.port }}
+  selector:
+    app: {{ .Values.global.postgres.name }}
+{{- end }}

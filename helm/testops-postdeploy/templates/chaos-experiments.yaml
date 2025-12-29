@@ -1,0 +1,93 @@
+{{- if .Values.chaos.enabled }}
+# Pod Failure Chaos
+{{- if .Values.chaos.podFailure.enabled }}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: pod-failure-django
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "testops-postdeploy.labels" . | nindent 4 }}
+spec:
+  action: pod-failure
+  mode: one
+  duration: "30s"
+  selector:
+    namespaces:
+      - {{ .Values.namespace }}
+    labelSelectors:
+      app: team9-publisher
+  scheduler:
+    cron: "@every 5m"
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: pod-kill-consumer
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "testops-postdeploy.labels" . | nindent 4 }}
+spec:
+  action: pod-kill
+  mode: fixed
+  value: "1"
+  duration: "20s"
+  selector:
+    namespaces:
+      - {{ .Values.namespace }}
+    labelSelectors:
+      app: test-execute-consumer
+  scheduler:
+    cron: "@every 3m"
+{{- end }}
+
+---
+# Network Delay Chaos
+{{- if .Values.chaos.networkDelay.enabled }}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-delay-kafka
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "testops-postdeploy.labels" . | nindent 4 }}
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - {{ .Values.namespace }}
+    labelSelectors:
+      app: test-execute-consumer
+  delay:
+    latency: {{ .Values.chaos.networkDelay.latency | quote }}
+    correlation: "25"
+    jitter: "10ms"
+  duration: "2m"
+  direction: to
+{{- end }}
+
+---
+# CPU Stress Chaos
+{{- if .Values.chaos.cpuStress.enabled }}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: cpu-stress-django
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "testops-postdeploy.labels" . | nindent 4 }}
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - {{ .Values.namespace }}
+    labelSelectors:
+      app: team9-publisher
+  stressors:
+    cpu:
+      workers: 1
+      load: {{ .Values.chaos.cpuStress.load }}
+  duration: "1m"
+{{- end }}
+{{- end }}

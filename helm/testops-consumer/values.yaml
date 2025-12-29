@@ -1,0 +1,84 @@
+# Default values for ai-testops-consumer
+
+namespace: team9-ns
+
+# Global image settings
+image:
+  pullPolicy: Always
+
+# Test Execute Consumer
+consumer:
+  enabled: true
+  name: test-execute-consumer
+  replicaCount: 1
+  image:
+    repository: vanlahuynhduc/ai-testops-consumer
+    tag: "4f47cbf"
+  service:
+    type: ClusterIP
+    port: 8002
+    metricsPort: 8001
+  env:
+    PUBLISHER_URL: "http://team9-publisher:8000"
+    KAFKA_BOOTSTRAP_SERVERS: "kafka.team9-ns.svc.cluster.local:9092"
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "100m"
+  autoscaling:
+    enabled: false  # Disable HPA for consumer - scale based on Kafka lag instead
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+  # Pod probes configuration for the consumer container
+  probes:
+    enabled: true
+    livenessProbe:
+      enabled: true
+      httpGet:
+        path: /health
+        port: 8002
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+      successThreshold: 1
+    readinessProbe:
+      enabled: true
+      httpGet:
+        path: /ready
+        port: 8002
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+      successThreshold: 1
+    startupProbe:
+      enabled: false
+      httpGet:
+        path: /health
+        port: 8002
+      failureThreshold: 30
+      periodSeconds: 10
+
+# Kafka connection (external to this chart)
+kafka:
+  name: kafka
+  service:
+    port: 9092
+
+# KEDA Autoscaling
+keda:
+  enabled: true
+  pollingInterval: 30
+  cooldownPeriod: 300
+  consumer:
+    minReplicas: 1
+    maxReplicas: 5
+    consumerGroup: "test_group"
+    topic: "test_run_queue"
+    lagThreshold: "5"
+

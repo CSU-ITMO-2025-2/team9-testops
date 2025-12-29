@@ -1,0 +1,71 @@
+{{- if .Values.analysis.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ .Values.djangoApp.name }}-analysis
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "ai-testops.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  args:
+  - name: grafana-auth
+    valueFrom:
+      secretKeyRef:
+        name: api-keys-secret
+        key: GRAFANA_BASIC_AUTH
+  metrics:
+  - name: error-rate
+    interval: 30s
+    count: 3
+    failureCondition: result[0] >= 0.05
+    successCondition: result[0] < 0.05
+    consecutiveErrorLimit: 8
+    provider:
+      prometheus:
+        address: {{ .Values.monitoring.grafana.prometheusUrl | quote }}
+        headers:
+        - key: Authorization
+          value: "Basic {{`{{args.grafana-auth}}`}}"
+        query: |
+          (
+            sum(rate(http_requests_total{
+              job="django-app",
+              namespace="{{ .Values.namespace }}",
+              status=~"5.."
+            }[1m]))
+          /
+            sum(rate(http_requests_total{
+              job="django-app",
+              namespace="{{ .Values.namespace }}"
+            }[1m]))
+          )
+          or vector(0)
+
+  - name: cpu-usage
+    interval: 30s
+    count: 3
+    failureCondition: result[0] > 0.8
+    successCondition: result[0] < 0.7
+    consecutiveErrorLimit: 8
+    provider:
+      prometheus:
+        address: {{ .Values.monitoring.grafana.prometheusUrl | quote }}
+        headers:
+        - key: Authorization
+          value: "Basic {{`{{args.grafana-auth}}`}}"
+        query: |
+          (
+            sum(rate(container_cpu_usage_seconds_total{
+              pod=~"{{ .Values.djangoApp.name }}-.*",
+              container!="POD"
+            }[1m]))
+            /
+            sum(kube_pod_container_resource_requests{
+              pod=~"{{ .Values.djangoApp.name }}-.*",
+              resource="cpu"
+            })
+          )
+          or vector(0)
+{{- end }}

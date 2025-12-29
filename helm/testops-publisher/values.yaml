@@ -1,0 +1,70 @@
+# Default values for team9-publisher
+
+namespace: team9-ns
+
+# Monitoring
+monitoring:
+  grafana:
+    prometheusUrl: "https://prometheus-prod-43-prod-ap-south-1.grafana.net/api/prom"
+
+# Global image settings
+image:
+  pullPolicy: Always
+
+# Django Application
+djangoApp:
+  enabled: true
+  name: team9-publisher
+  replicaCount: 1
+  image:
+    repository: vanlahuynhduc/ai-testops
+    tag: "4f47cbf"
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "300m"
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+# External dependencies (deployed by testops-infra)
+postgres:
+  name: postgres
+  service:
+    port: 5432
+
+kafka:
+  name: kafka
+  service:
+    port: 9092
+
+# Ingress
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+  hosts:
+    - host: team9.kubepractice.ru
+      paths:
+        - path: /
+          pathType: Prefix
+          service: team9-publisher
+          port: 8000
+  tls:
+    - hosts:
+        - team9.kubepractice.ru
+      secretName: tls-secret
+
+# Analysis Templates for Rollouts
+analysis:
+  enabled: true
