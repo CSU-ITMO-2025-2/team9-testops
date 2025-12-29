@@ -2,6 +2,19 @@ apiVersion: v1
 entries:
   team9-consumer:
   - apiVersion: v2
+    appVersion: "1292152"
+    created: "2025-12-29T09:33:15.027165959Z"
+    description: Consumer service for TestOps platform
+    digest: 9aaf744a09e0f991bb4f9c78f451eeeb44f109011a65097cace9d56af6971566
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-consumer
+    type: application
+    urls:
+    - https://CSU-ITMO-2025-2.github.io/team9-testops/charts/team9-consumer-1.1.43.tgz
+    version: 1.1.43
+  - apiVersion: v2
     appVersion: 4f47cbf
     created: "2025-12-29T08:57:45.098655782Z"
     description: Consumer service for TestOps platform
@@ -418,6 +431,36 @@ entries:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-consumer-1.1.10/team9-consumer-1.1.10.tgz
     version: 1.1.10
   team9-infra:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-12-29T09:33:15.02803432Z"
+    dependencies:
+    - condition: postgres.enabled
+      name: postgres
+      repository: ""
+      version: 1.0.0
+    - condition: kafka.enabled
+      name: kafka
+      repository: ""
+      version: 1.0.0
+    - name: shared
+      repository: ""
+      version: 1.0.0
+    - condition: prometheus.enabled
+      name: prometheus
+      repository: ""
+      version: 1.0.0
+    description: Infrastructure components for TestOps platform (PostgreSQL, Kafka,
+      shared resources)
+    digest: 9761e7c4c1861f351ab7382d264b6bce20b344a16e79c059de699a10ff4f8f8f
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-infra
+    type: application
+    urls:
+    - https://CSU-ITMO-2025-2.github.io/team9-testops/charts/team9-infra-1.2.70.tgz
+    version: 1.2.70
   - apiVersion: v2
     appVersion: 1.0.0
     created: "2025-12-29T08:57:45.100399762Z"
@@ -1890,6 +1933,19 @@ entries:
     version: 1.2.21
   team9-notification:
   - apiVersion: v2
+    appVersion: "1292152"
+    created: "2025-12-29T09:33:15.028397187Z"
+    description: Notification service for TestOps platform
+    digest: 51d84ab7604d79bc0343a495198b95f1375128dfd11bb171762c707ea6632bd5
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-notification
+    type: application
+    urls:
+    - https://CSU-ITMO-2025-2.github.io/team9-testops/charts/team9-notification-0.1.14.tgz
+    version: 0.1.14
+  - apiVersion: v2
     appVersion: 4f47cbf
     created: "2025-12-29T08:57:45.101350049Z"
     description: Notification service for TestOps platform
@@ -2059,6 +2115,19 @@ entries:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/team9-notification-0.1.1/team9-notification-0.1.1.tgz
     version: 0.1.1
   team9-postdeploy:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-12-29T09:33:15.02866129Z"
+    description: Post-deployment resources for TestOps (NetworkPolicies, Monitoring)
+    digest: 0f497ea1cc14f939847c0c0bd2c19f25abbc5122751595dc251341dc3a270313
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-postdeploy
+    type: application
+    urls:
+    - https://CSU-ITMO-2025-2.github.io/team9-testops/charts/team9-postdeploy-1.1.45.tgz
+    version: 1.1.45
   - apiVersion: v2
     appVersion: 1.0.0
     created: "2025-12-29T08:57:45.103082247Z"
@@ -2456,8 +2525,32 @@ entries:
         kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.12.0/keda-2.12.0.yaml
       keda.sh/required: "true"
     apiVersion: v2
+    appVersion: "1292152"
+    created: "2025-12-29T09:33:15.029822948Z"
+    description: Publisher service for TestOps platform
+    digest: 0b1b1ea3c844fa826e55a1558058181c845803d9717e9edf8db27fcafd09731f
+    keywords:
+    - ai
+    - testing
+    - kafka
+    - microservices
+    - keda
+    maintainers:
+    - email: thduc.dev@gmail.com
+      name: Duc Truong
+    name: team9-publisher
+    type: application
+    urls:
+    - https://CSU-ITMO-2025-2.github.io/team9-testops/charts/team9-publisher-1.4.64.tgz
+    version: 1.4.64
+  - annotations:
+      keda.sh/installation: |
+        Install KEDA before deploying this chart:
+        kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.12.0/keda-2.12.0.yaml
+      keda.sh/required: "true"
+    apiVersion: v2
     appVersion: "2845442"
-    created: "2025-12-29T09:27:48.059137982Z"
+    created: "2025-12-29T09:33:15.029427821Z"
     description: Publisher service for TestOps platform
     digest: a9f235fda2e31669fbf52ec415bd4d8fbccf9da68ad6245d578b4d7ca6438f45
     keywords:
@@ -2481,7 +2574,7 @@ entries:
       keda.sh/required: "true"
     apiVersion: v2
     appVersion: 6f0d793
-    created: "2025-12-29T09:27:48.058715865Z"
+    created: "2025-12-29T09:33:15.029049795Z"
     description: Publisher service for TestOps platform
     digest: ce8e87f27b3eacbb13bb6fdfd9e7132bafcaedc236e2f15a29f042340d7696cb
     keywords:
@@ -3806,4 +3899,4 @@ entries:
     urls:
     - https://github.com/CSU-ITMO-2025-2/team9-testops/releases/download/testops-publisher-1.4.10/testops-publisher-1.4.10.tgz
     version: 1.4.10
-generated: "2025-12-29T09:27:48.058113372Z"
+generated: "2025-12-29T09:33:15.026597608Z"
